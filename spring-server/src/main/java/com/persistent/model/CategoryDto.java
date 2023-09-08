@@ -31,7 +31,7 @@ import javax.persistence.SequenceGenerator;
  * Category
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-08T05:43:50.191685598Z[UTC]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-08T05:45:51.985361050Z[UTC]")
 @Data
 @Entity
 @AllArgsConstructor
