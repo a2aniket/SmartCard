@@ -33,7 +33,7 @@ import java.util.Optional;
 import javax.annotation.Generated;
 import com.persistent.util.Constants;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-08T05:45:51.985361050Z[UTC]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-08T05:53:12.575680495Z[UTC]")
 @Validated
 @Tag(name = "category", description = "Operations about category")
 public interface CategoryApi {
