@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: Code Generation API
+  version: 1.0.0
+servers:
+  - url: http://34.227.17.219/v1/apigen
+paths:
+  /generate/code:
+    post:
+      summary: Generate code from OpenAPI specification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                  description: The programming language to generate code for
+                openAPIUrl:
+                  type: string
+                  description: The URL of the OpenAPI specification to generate code from
+              required:
+                - language
+                - openAPIUrl
+      responses:
+        '200':
+          description: Code generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: A message indicating that code generation was successful
+              example:
+                message: Code generated successfully. Please refresh with Git.
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: A message indicating that the request was invalid
+              example:
+                message: >-
+                  Invalid request. Please provide a valid programming language
+                  and OpenAPI specification URL.
