@@ -35,7 +35,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .cors()
                 .and()
                 // This tells Spring Security to permit everyone to access the auth/login endpoint
-                .authorizeRequests().antMatchers("/api/v3/auth/login").permitAll()
+                .authorizeRequests().antMatchers("/v1/apigen/auth/login").permitAll()
                 // And all other requests must be authenticated
                 .anyRequest().authenticated().and().exceptionHandling().and().sessionManagement()
                 // Make sure we use stateless session

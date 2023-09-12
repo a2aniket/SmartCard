@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.extern.log4j.Log4j2;
 
 @RestController
-@RequestMapping("/api/v3/auth")
+@RequestMapping("/v1/apigen/auth")
 @Log4j2
 public class AuthController {
 
