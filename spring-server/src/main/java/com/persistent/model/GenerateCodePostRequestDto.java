@@ -33,7 +33,7 @@ import javax.persistence.SequenceGenerator;
  */
 
 @JsonTypeName("_generate_code_post_request")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-12T06:47:06.791983450Z[UTC]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-12T06:54:12.378002081Z[UTC]")
 @Data
 @Entity
 @AllArgsConstructor
