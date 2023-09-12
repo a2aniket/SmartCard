@@ -35,7 +35,7 @@ import java.util.Optional;
 import javax.annotation.Generated;
 import com.persistent.util.Constants;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-12T06:35:52.583776272Z[UTC]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-12T06:47:06.791983450Z[UTC]")
 @Validated
 @Tag(name = "generate", description = "the generate API")
 public interface GenerateApi {
