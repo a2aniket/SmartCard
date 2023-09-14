@@ -23,7 +23,7 @@ import javax.persistence.Id;
  */
 
 @JsonTypeName("_generate_code_post_400_response")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-14T11:45:13.376466311Z[UTC]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-14T11:46:03.919943524Z[UTC]")
 @Data
 public class GenerateCodePost400Response {
 
