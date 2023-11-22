@@ -39,7 +39,7 @@ import java.util.Optional;
 import javax.annotation.Generated;
 import com.persistent.util.Constants;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-09-28T11:11:37.259833014Z[UTC]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-11-22T12:35:31.704Z[UTC]")
 @Controller
 @RequestMapping("${openapi.codeGeneration.base-path:/v1/apigen}")
 public class GenerateApiController implements GenerateApi {
