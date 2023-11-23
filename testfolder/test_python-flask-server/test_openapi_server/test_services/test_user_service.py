@@ -2,31 +2,32 @@ from python-flask-server.openapi_server.services.user_service import *
 import unittest
 from openapi_server.models.user import User
 from openapi_server.config_test import db
-from openapi_server.services.user_service import UserService
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class TestUserService(unittest.TestCase):
 
-    def setUp(self):
-        db.create_all()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-
     def test_create_user(self):
-        user = UserService.create_user("test_user", "test_password")
-        self.assertEqual(user.username, "test_user")
-        self.assertEqual(user.password, "test_password")
+        logging.info("Testing create_user function.")
+        # Test for creating a user
+        user = UserService.create_user("testuser", "testpassword")
+        self.assertIsInstance(user, User)
+        self.assertEqual(user.username, "testuser")
+        self.assertEqual(user.password, "testpassword")
 
     def test_get_user_by_username(self):
-        user = UserService.create_user("test_user", "test_password")
-        retrieved_user = UserService.get_user_by_username("test_user")
-        self.assertEqual(user, retrieved_user)
+        logging.info("Testing get_user_by_username function.")
+        # Test for getting a user by username
+        user = UserService.create_user("testuser", "testpassword")
+        user_by_username = UserService.get_user_by_username("testuser")
+        self.assertEqual(user, user_by_username)
 
-    def test_get_user_by_nonexistent_username(self):
-        user = UserService.create_user("test_user", "test_password")
-        retrieved_user = UserService.get_user_by_username("nonexistent_user")
-        self.assertIsNone(retrieved_user)
+    def test_get_nonexistent_user_by_username(self):
+        logging.info("Testing get_user_by_username function for nonexistent user.")
+        # Test for getting a nonexistent user by username
+        user_by_username = UserService.get_user_by_username("nonexistentuser")
+        self.assertIsNone(user_by_username)
 
 if __name__ == '__main__':
     unittest.main()

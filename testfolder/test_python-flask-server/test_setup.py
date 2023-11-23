@@ -1,2 +1,2 @@
 from python-flask-server.setup import *
-Sorry, it is not possible to write test cases for this code snippet as it is a setup.py file for installing a Python package and does not contain any functions or logic to be tested with unit tests.
+There is no need for unit tests for this code snippet as it is a setup.py file used for installing dependencies and packages. It does not contain any logic or functions that need to be tested.

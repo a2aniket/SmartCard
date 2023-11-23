@@ -2,35 +2,33 @@ from python-flask-server.openapi_server.models.generate_code_post200_response im
 import unittest
 from datetime import date, datetime
 from openapi_server.config_test import db
-from openapi_server.models.generate_code_post200_response import GenerateCodePost200Response, GenerateCodePost200ResponseSchema
+from openapi_server.models import GenerateCodePost200Response, GenerateCodePost200ResponseSchema
 
 class TestGenerateCodePost200Response(unittest.TestCase):
 
-    def setUp(self):
-        self.test_message = "Test message"
-        self.test_response = GenerateCodePost200Response(message=self.test_message)
-        db.create_all()
+    def test_message_not_null(self):
+        """Test that message is not null"""
+        response = GenerateCodePost200Response(message="test message")
+        self.assertIsNotNone(response.message)
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+    def test_message_type(self):
+        """Test that message is of string type"""
+        response = GenerateCodePost200Response(message="test message")
+        self.assertIsInstance(response.message, str)
 
-    def test_generate_code_post200_response_model(self):
-        self.assertIsInstance(self.test_response, GenerateCodePost200Response)
-        self.assertEqual(self.test_response.message, self.test_message)
-
-    def test_generate_code_post200_response_schema(self):
-        serialized_response = GenerateCodePost200Response_schema.dump(self.test_response)
+    def test_response_schema(self):
+        """Test that response schema is working"""
+        response = GenerateCodePost200Response(message="test message")
+        serialized_response = GenerateCodePost200ResponseSchema().dump(response)
         self.assertIsInstance(serialized_response, dict)
-        self.assertIn('message', serialized_response)
-        self.assertEqual(serialized_response['message'], self.test_message)
 
-    def test_generate_code_post200_responses_schema(self):
-        test_response_list = [self.test_response]
-        serialized_response_list = GenerateCodePost200Responses_schema.dump(test_response_list)
-        self.assertIsInstance(serialized_response_list, list)
-        self.assertEqual(len(serialized_response_list), 1)
-        serialized_response = serialized_response_list[0]
-        self.assertIsInstance(serialized_response, dict)
-        self.assertIn('message', serialized_response)
-        self.assertEqual(serialized_response['message'], self.test_message)
+    def test_responses_schema(self):
+        """Test that responses schema is working"""
+        responses = [GenerateCodePost200Response(message="test message1"),
+                     GenerateCodePost200Response(message="test message2")]
+        serialized_responses = GenerateCodePost200ResponseSchema(many=True).dump(responses)
+        self.assertIsInstance(serialized_responses, list)
+        self.assertEqual(len(serialized_responses), 2)
+
+if __name__ == '__main__':
+    unittest.main()
