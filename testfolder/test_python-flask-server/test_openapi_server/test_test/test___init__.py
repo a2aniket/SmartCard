@@ -1,12 +1,11 @@
 from python-flask-server.openapi_server.test.__init__ import *
 import unittest
 import logging
-import os
-import sys
-import json
+
 import connexion
-from openapi_server.encoder import JSONEncoder
 from flask_testing import TestCase
+
+from openapi_server.encoder import JSONEncoder
 
 
 class TestBase(TestCase):
@@ -19,21 +18,14 @@ class TestBase(TestCase):
         return app.app
 
     def test_create_app(self):
-        self.app = self.create_app()
-        self.assertIsNotNone(self.app)
+        app = self.create_app()
+        self.assertIsNotNone(app)
 
-    def test_logger_level(self):
+    def test_logging(self):
         logger = logging.getLogger('connexion.operation')
         self.assertEqual(logger.level, logging.ERROR)
 
-    def test_json_encoder(self):
-        encoder = JSONEncoder()
-        self.assertIsNotNone(encoder)
-
-    def test_api_spec(self):
-        with open('../openapi/openapi.yaml', 'r') as f:
-            spec = yaml.safe_load(f)
-        self.assertIsNotNone(spec)
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_api(self):
+        with self.client:
+            response = self.client.get('/')
+            self.assertEqual(response.status_code, 200)
