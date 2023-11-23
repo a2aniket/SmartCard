@@ -2,56 +2,69 @@ from python-flask-server.openapi_server.services.searching import *
 import unittest
 
 class TestSearching(unittest.TestCase):
-    def setUp(self):
-        self.Model = Model # define the Model object
-        self.search_params = "" # define empty search parameters
+    def test_no_search_params(self):
+        from models import Model # assuming Model is defined in another file
+        result = searching(None, Model)
+        self.assertEqual(result, Model.query)
 
-    def test_empty_search_params(self):
-        # Test when search parameters are empty
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.all()))
+    def test_single_equal_operator(self):
+        from models import Model
+        result = searching("name = 'John'", Model)
+        query_filters = [getattr(Model, 'name') == 'John']
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
-    def test_search_by_equal_operator(self):
-        # Test when searching by equal operator
-        self.search_params = "field = value"
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.filter(Model.field == "value").all()))
+    def test_single_less_than_operator(self):
+        from models import Model
+        result = searching("age < 18", Model)
+        query_filters = [getattr(Model, 'age') < 18]
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
-    def test_search_by_less_than_operator(self):
-        # Test when searching by less than operator
-        self.search_params = "field < 5"
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.filter(Model.field < 5).all()))
+    def test_single_greater_than_operator(self):
+        from models import Model
+        result = searching("salary > 50000", Model)
+        query_filters = [getattr(Model, 'salary') > 50000]
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
-    def test_search_by_greater_than_operator(self):
-        # Test when searching by greater than operator
-        self.search_params = "field > 10"
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.filter(Model.field > 10).all()))
+    def test_single_less_than_equal_to_operator(self):
+        from models import Model
+        result = searching("age <= 18", Model)
+        query_filters = [getattr(Model, 'age') <= 18]
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
-    def test_search_by_less_than_or_equal_to_operator(self):
-        # Test when searching by less than or equal to operator
-        self.search_params = "field <= 3"
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.filter(Model.field <= 3).all()))
+    def test_single_greater_than_equal_to_operator(self):
+        from models import Model
+        result = searching("salary >= 50000", Model)
+        query_filters = [getattr(Model, 'salary') >= 50000]
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
-    def test_search_by_greater_than_or_equal_to_operator(self):
-        # Test when searching by greater than or equal to operator
-        self.search_params = "field >= 7"
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.filter(Model.field >= 7).all()))
+    def test_single_like_operator(self):
+        from models import Model
+        result = searching('name like "%ohn%"', Model)
+        query_filters = [getattr(Model, 'name').like('%ohn%')]
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
-    def test_search_by_like_operator(self):
-        # Test when searching by like operator
-        self.search_params = 'field like "%value%"'
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.filter(Model.field.like("%value%")).all()))
+    def test_single_between_operator(self):
+        from models import Model
+        result = searching('age BETWEEN 18 AND 25', Model)
+        query_filters = [getattr(Model, 'age').between(18, 25)]
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
-    def test_search_by_between_operator(self):
-        # Test when searching by between operator
-        self.search_params = "field BETWEEN 5 AND 10"
-        result = searching(self.search_params, self.Model)
-        self.assertEqual(len(result.all()), len(self.Model.query.filter(Model.field.between(5, 10)).all()))
+    def test_multiple_criteria(self):
+        from models import Model
+        result = searching('name = "John"; salary > 50000', Model)
+        query_filters = [
+            getattr(Model, 'name') == 'John',
+            getattr(Model, 'salary') > 50000,
+        ]
+        expected_query = Model.query.filter(*query_filters)
+        self.assertEqual(result, expected_query)
 
 if __name__ == '__main__':
     unittest.main()
