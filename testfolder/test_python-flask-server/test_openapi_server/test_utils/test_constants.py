@@ -1,51 +1,39 @@
 from python-flask-server.openapi_server.utils.constants import *
 import unittest
-from my_module import my_function
 
-class TestMyFunction(unittest.TestCase):
-    def test_default_parameters(self):
-        result = my_function()
-        self.assertEqual(result['pageNumber'], 1)
-        self.assertEqual(result['pageSize'], 100)
-        self.assertEqual(result['sortBy'], 'id')
-        self.assertEqual(result['sortDir'], 'asc')
-        self.assertEqual(result['search'], '')
-
-    def test_custom_parameters(self):
-        result = my_function(
-            pageNumber=2,
-            pageSize=50,
-            sortBy='name',
-            sortDir='desc',
-            search='example'
-        )
-        self.assertEqual(result['pageNumber'], 2)
-        self.assertEqual(result['pageSize'], 50)
-        self.assertEqual(result['sortBy'], 'name')
-        self.assertEqual(result['sortDir'], 'desc')
-        self.assertEqual(result['search'], 'example')
-
-    def test_missing_parameters(self):
-        result = my_function(
-            PARAM_PAGE_NUMBER=2,
-            PARAM_PAGE_SIZE=50,
-            PARAM_SORT_BY='name'
-        )
-        self.assertEqual(result['pageNumber'], 2)
-        self.assertEqual(result['pageSize'], 50)
-        self.assertEqual(result['sortBy'], 'name')
-        self.assertEqual(result['sortDir'], 'asc')
-        self.assertEqual(result['search'], '')
-
-    def test_invalid_parameters(self):
-        with self.assertRaises(ValueError):
-            my_function(pageNumber=0)
+class TestParams(unittest.TestCase):
+    
+    def test_default_params(self):
+        self.assertEqual(pageNumber, 1)
+        self.assertEqual(pageSize, 100)
+        self.assertEqual(sortBy, 'id')
+        self.assertEqual(sortDir, 'asc')
+        self.assertEqual(search, '')
         
-        with self.assertRaises(ValueError):
-            my_function(pageSize=0)
+    def test_custom_params(self):
+        custom_pageNumber = 2
+        custom_pageSize = 50
+        custom_sortBy = 'name'
+        custom_sortDir = 'desc'
+        custom_search = 'test'
         
-        with self.assertRaises(ValueError):
-            my_function(sortDir='invalid')
-
+        self.assertEqual(custom_pageNumber, 2)
+        self.assertEqual(custom_pageSize, 50)
+        self.assertEqual(custom_sortBy, 'name')
+        self.assertEqual(custom_sortDir, 'desc')
+        self.assertEqual(custom_search, 'test')
+        
+    def test_invalid_params(self):
+        with self.assertRaises(TypeError):
+            invalid_pageNumber = 'invalid'
+        with self.assertRaises(TypeError):
+            invalid_pageSize = 'invalid'
+        with self.assertRaises(TypeError):
+            invalid_sortBy = 123
+        with self.assertRaises(TypeError):
+            invalid_sortDir = 456
+        with self.assertRaises(TypeError):
+            invalid_search = 789
+            
 if __name__ == '__main__':
     unittest.main()

@@ -1,34 +1,38 @@
 from python-flask-server.openapi_server.models.generate_code_post200_response import *
 import unittest
 from datetime import date, datetime
-from openapi_server.config_test import db
-from openapi_server.models import GenerateCodePost200Response, GenerateCodePost200ResponseSchema
+from openapi_server.config_test import db, ma
+from openapi_server.models.generate_code_post200_response import GenerateCodePost200Response, GenerateCodePost200ResponseSchema
 
 class TestGenerateCodePost200Response(unittest.TestCase):
 
+    def test_message_exists(self):
+        response = GenerateCodePost200Response(message="Hello World")
+        self.assertEqual(response.message, "Hello World")
+
     def test_message_not_null(self):
-        """Test that message is not null"""
-        response = GenerateCodePost200Response(message="test message")
-        self.assertIsNotNone(response.message)
+        response = GenerateCodePost200Response(message=None)
+        self.assertIsNone(response.message)
 
     def test_message_type(self):
-        """Test that message is of string type"""
-        response = GenerateCodePost200Response(message="test message")
+        response = GenerateCodePost200Response(message="Hello World")
         self.assertIsInstance(response.message, str)
 
-    def test_response_schema(self):
-        """Test that response schema is working"""
-        response = GenerateCodePost200Response(message="test message")
-        serialized_response = GenerateCodePost200ResponseSchema().dump(response)
-        self.assertIsInstance(serialized_response, dict)
+    def test_schema_loads_instance(self):
+        response = GenerateCodePost200Response(message="Hello World")
+        serialized_data = GenerateCodePost200Response_schema.dump(response)
+        deserialized_data = GenerateCodePost200Response_schema.load(serialized_data)
+        self.assertIsInstance(deserialized_data, GenerateCodePost200Response)
 
-    def test_responses_schema(self):
-        """Test that responses schema is working"""
-        responses = [GenerateCodePost200Response(message="test message1"),
-                     GenerateCodePost200Response(message="test message2")]
-        serialized_responses = GenerateCodePost200ResponseSchema(many=True).dump(responses)
-        self.assertIsInstance(serialized_responses, list)
-        self.assertEqual(len(serialized_responses), 2)
+    def test_schema_loads_multiple_instances(self):
+        response1 = GenerateCodePost200Response(message="Hello World")
+        response2 = GenerateCodePost200Response(message="Goodbye World")
+        responses = [response1, response2]
+        serialized_data = GenerateCodePost200Responses_schema.dump(responses)
+        deserialized_data = GenerateCodePost200Responses_schema.load(serialized_data, many=True)
+        self.assertIsInstance(deserialized_data, list)
+        self.assertIsInstance(deserialized_data[0], GenerateCodePost200Response)
+        self.assertIsInstance(deserialized_data[1], GenerateCodePost200Response)
 
 if __name__ == '__main__':
     unittest.main()

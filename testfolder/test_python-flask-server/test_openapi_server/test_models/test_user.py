@@ -5,38 +5,27 @@ from openapi_server.config_test import db,ma
 from openapi_server.models.user import User, UserSchema
 
 class TestUser(unittest.TestCase):
-    
-    def setUp(self):
-        self.db = db
-        self.db.create_all()
-        self.user = User(username='test_user', password='test_password')
-        self.db.session.add(self.user)
-        self.db.session.commit()
-        self.user_schema = UserSchema()
 
-    def tearDown(self):
-        self.db.session.remove()
-        self.db.drop_all()
+    def setUp(self):
+        self.user1 = User(username="user1", password="password1")
+        db.session.add(self.user1)
+        db.session.commit()
 
     def test_set_password(self):
-        self.user.set_password('new_password')
-        self.assertTrue(check_password_hash(self.user.password, 'new_password'))
+        self.user1.set_password("newpassword")
+        self.assertTrue(check_password_hash(self.user1.password, "newpassword"))
 
     def test_check_password(self):
-        self.assertTrue(self.user.check_password('test_password'))
-        self.assertFalse(self.user.check_password('wrong_password'))
+        self.assertTrue(self.user1.check_password("password1"))
+        self.assertFalse(self.user1.check_password("wrongpassword"))
 
     def test_to_dict(self):
-        user_dict = self.user.to_dict()
-        self.assertEqual(user_dict['id'], self.user.id)
-        self.assertEqual(user_dict['username'], self.user.username)
+        user_dict = self.user1.to_dict()
+        self.assertEqual(user_dict['id'], self.user1.id)
+        self.assertEqual(user_dict['username'], self.user1.username)
 
     def test_user_schema(self):
-        user_data = {
-            'username': 'new_user',
-            'password': 'new_password'
-        }
-        user = self.user_schema.load(user_data, session=self.db.session)
-        self.assertIsInstance(user, User)
-        self.assertEqual(user.username, user_data['username'])
-        self.assertTrue(check_password_hash(user.password, user_data['password']))
+        user_schema = UserSchema()
+        user = user_schema.load({'username': 'user2', 'password': 'password2'})
+        self.assertEqual(user.username, 'user2')
+        self.assertEqual(check_password_hash(user.password, 'password2'), True)

@@ -1,63 +1,61 @@
 from python-flask-server.openapi_server.util import *
-import datetime
-import six
-import typing
 import unittest
-from openapi_server import typing_utils
+from datetime import datetime, date
+from openapi_server import typing_utils, _deserialize, deserialize_date, deserialize_datetime, deserialize_model
 
-class Test_Deserialize(unittest.TestCase):
-    def setUp(self):
-        pass
+class TestDeserialize(unittest.TestCase):
 
-    def test_deserialize_date(self):
-        date_str = "2022-12-31"
-        expected_date = datetime.date(2022, 12, 31)
-        self.assertEqual(deserialize_date(date_str), expected_date)
-
-    def test_deserialize_datetime(self):
-        datetime_str = "2022-12-31T23:59:59.999999Z"
-        expected_datetime = datetime.datetime(2022, 12, 31, 23, 59, 59, 999999)
-        self.assertEqual(deserialize_datetime(datetime_str), expected_datetime)
-
-    def test_deserialize_primitive_int(self):
-        int_data = 123
-        self.assertEqual(_deserialize_primitive(int_data, int), 123)
-
-    def test_deserialize_primitive_float(self):
-        float_data = 123.456
-        self.assertEqual(_deserialize_primitive(float_data, float), 123.456)
-
-    def test_deserialize_primitive_bool(self):
-        bool_data = True
-        self.assertEqual(_deserialize_primitive(bool_data, bool), True)
-
-    def test_deserialize_primitive_str(self):
-        str_data = "test"
-        self.assertEqual(_deserialize_primitive(str_data, str), "test")
-
-    def test_deserialize_primitive_bytearray(self):
-        bytearray_data = bytearray(b'test')
-        self.assertEqual(_deserialize_primitive(bytearray_data, bytearray), bytearray(b'test'))
+    def test_deserialize_primitive(self):
+        self.assertEqual(_deserialize_primitive('100', int), 100)
+        self.assertEqual(_deserialize_primitive('100.0', float), 100.0)
+        self.assertEqual(_deserialize_primitive('True', bool), True)
+        self.assertEqual(_deserialize_primitive('test', str), 'test')
+        self.assertEqual(_deserialize_primitive(b'123', bytearray), bytearray(b'123'))
 
     def test_deserialize_object(self):
-        obj_data = {"test": "data"}
-        self.assertEqual(_deserialize_object(obj_data), obj_data)
+        obj = object()
+        self.assertIs(_deserialize_object(obj), obj)
 
-    def test_deserialize_model(self):
-        data = {"attr1": "value1", "attr2": "value2"}
-        klass = typing.NamedTuple("TestModel", [("attr1", str), ("attr2", str)])
-        expected_instance = klass(attr1="value1", attr2="value2")
-        self.assertEqual(deserialize_model(data, klass), expected_instance)
+    def test_deserialize_date(self):
+        self.assertEqual(deserialize_date('2022-12-31'), date(2022, 12, 31))
+        self.assertEqual(deserialize_date(None), None)
+
+    def test_deserialize_datetime(self):
+        self.assertEqual(deserialize_datetime('2022-12-31T12:30:45.123456Z'), datetime(2022, 12, 31, 12, 30, 45, 123456))
+        self.assertEqual(deserialize_datetime(None), None)
 
     def test_deserialize_list(self):
-        data = ["value1", "value2"]
-        expected_list = ["value1", "value2"]
-        self.assertEqual(_deserialize_list(data, str), expected_list)
+        data = ['1', '2', '3']
+        boxed_type = int
+        result = _deserialize_list(data, boxed_type)
+        self.assertListEqual(result, [1, 2, 3])
 
     def test_deserialize_dict(self):
-        data = {"key1": "value1", "key2": "value2"}
-        expected_dict = {"key1": "value1", "key2": "value2"}
-        self.assertEqual(_deserialize_dict(data, str), expected_dict)
+        data = {'a': '1', 'b': '2'}
+        boxed_type = int
+        result = _deserialize_dict(data, boxed_type)
+        self.assertDictEqual(result, {'a': 1, 'b': 2})
+
+    def test_deserialize_model(self):
+        class TestModel:
+            openapi_types = {
+                'a': str, 'b': int
+            }
+            attribute_map = {
+                'a': 'A', 'b': 'B'
+            }
+
+        data = {'A': 'test', 'B': '100'}
+        result = deserialize_model(data, TestModel)
+        self.assertIsInstance(result, TestModel)
+        self.assertEqual(result.a, 'test')
+        self.assertEqual(result.b, 100)
+
+    def test_deserialize(self):
+        data = {'a': '1', 'b': ['2', '3']}
+        klass = typing.List[int]
+        result = _deserialize(data, klass)
+        self.assertListEqual(result, [1, 2, 3])
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,37 +1,39 @@
 from python-flask-server.openapi_server.models.generate_code_post_request import *
 import unittest
-from datetime import date, datetime
-from openapi_server.config_test import db, ma
-from openapi_server.models import GenerateCodePostRequest, GenerateCodePostRequestSchema
+from openapi_server import db, GenerateCodePostRequestSchema, GenerateCodePostRequest
 
 class TestGenerateCodePostRequest(unittest.TestCase):
-    
+
     def setUp(self):
-        db.create_all()
-    
+        self.db = db
+        self.generate_code_post_request_schema = GenerateCodePostRequestSchema()
+
     def tearDown(self):
         db.session.remove()
         db.drop_all()
-    
+
     def test_generate_code_post_request_model(self):
-        '''
-        Test if GenerateCodePostRequest model is created successfully
-        '''
-        request = GenerateCodePostRequest(language='Python', open_api_url='https://example.com')
-        db.session.add(request)
+        generate_code_post_request = GenerateCodePostRequest(language="python", open_api_url="https://example.com/api")
+        db.session.add(generate_code_post_request)
         db.session.commit()
-        self.assertEqual(request.language, 'Python')
-        self.assertEqual(request.open_api_url, 'https://example.com')
-    
-    def test_generate_code_post_request_schema(self):
-        '''
-        Test if GenerateCodePostRequestSchema is able to serialize and deserialize GenerateCodePostRequest object
-        '''
-        request = GenerateCodePostRequest(language='Python', open_api_url='https://example.com')
-        serialized_request = GenerateCodePostRequest_schema.dump(request)
-        self.assertEqual(serialized_request['language'], 'Python')
-        self.assertEqual(serialized_request['open_api_url'], 'https://example.com')
-        deserialized_request = GenerateCodePostRequest_schema.load(serialized_request)
-        self.assertIsInstance(deserialized_request, GenerateCodePostRequest)
-        self.assertEqual(deserialized_request.language, 'Python')
-        self.assertEqual(deserialized_request.open_api_url, 'https://example.com')
+
+        self.assertEqual(generate_code_post_request.language, "python")
+        self.assertEqual(generate_code_post_request.open_api_url, "https://example.com/api")
+
+    def test_generate_code_post_request_serialization(self):
+        generate_code_post_request = GenerateCodePostRequest(language="python", open_api_url="https://example.com/api")
+        serialized_data = self.generate_code_post_request_schema.dump(generate_code_post_request)
+
+        self.assertEqual(serialized_data["language"], "python")
+        self.assertEqual(serialized_data["open_api_url"], "https://example.com/api")
+
+    def test_generate_code_post_request_deserialization(self):
+        data = {"language": "python", "open_api_url": "https://example.com/api"}
+        deserialized_data = self.generate_code_post_request_schema.load(data)
+
+        self.assertIsInstance(deserialized_data, GenerateCodePostRequest)
+        self.assertEqual(deserialized_data.language, "python")
+        self.assertEqual(deserialized_data.open_api_url, "https://example.com/api")
+
+if __name__ == '__main__':
+    unittest.main()

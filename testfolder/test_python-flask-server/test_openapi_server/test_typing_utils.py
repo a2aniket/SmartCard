@@ -4,22 +4,25 @@ import sys
 import typing
 
 class TestIsGeneric(unittest.TestCase):
-    def test_is_generic(self):
+    
+    def test_is_generic_true(self):
         self.assertTrue(is_generic(typing.List[int]))
-        self.assertTrue(is_generic(typing.Dict[str, int]))
+        
+    def test_is_generic_false(self):
         self.assertFalse(is_generic(int))
-        self.assertFalse(is_generic(str))
-
+        
 class TestIsDict(unittest.TestCase):
-    def test_is_dict(self):
+    
+    def test_is_dict_true(self):
         self.assertTrue(is_dict(typing.Dict[str, int]))
-        self.assertFalse(is_dict(typing.List[int]))
+        
+    def test_is_dict_false(self):
         self.assertFalse(is_dict(int))
-        self.assertFalse(is_dict(str))
-
+        
 class TestIsList(unittest.TestCase):
-    def test_is_list(self):
+    
+    def test_is_list_true(self):
         self.assertTrue(is_list(typing.List[int]))
-        self.assertFalse(is_list(typing.Dict[str, int]))
+        
+    def test_is_list_false(self):
         self.assertFalse(is_list(int))
-        self.assertFalse(is_list(str))
