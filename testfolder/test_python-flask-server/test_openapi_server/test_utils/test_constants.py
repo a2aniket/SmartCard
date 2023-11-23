@@ -1,42 +1,51 @@
 from python-flask-server.openapi_server.utils.constants import *
 import unittest
+from my_module import my_function
 
-class TestPagination(unittest.TestCase):
+class TestMyFunction(unittest.TestCase):
     def test_default_parameters(self):
-        self.assertEqual(pageNumber, 1)
-        self.assertEqual(pageSize, 100)
-        self.assertEqual(sortBy, 'id')
-        self.assertEqual(sortDir, 'asc')
-        self.assertEqual(search, '')
+        result = my_function()
+        self.assertEqual(result['pageNumber'], 1)
+        self.assertEqual(result['pageSize'], 100)
+        self.assertEqual(result['sortBy'], 'id')
+        self.assertEqual(result['sortDir'], 'asc')
+        self.assertEqual(result['search'], '')
 
     def test_custom_parameters(self):
-        custom_pageNumber = 2
-        custom_pageSize = 50
-        custom_sortBy = 'name'
-        custom_sortDir = 'desc'
-        custom_search = 'example'
-
-        self.assertEqual(custom_pageNumber, 2)
-        self.assertEqual(custom_pageSize, 50)
-        self.assertEqual(custom_sortBy, 'name')
-        self.assertEqual(custom_sortDir, 'desc')
-        self.assertEqual(custom_search, 'example')
+        result = my_function(
+            pageNumber=2,
+            pageSize=50,
+            sortBy='name',
+            sortDir='desc',
+            search='example'
+        )
+        self.assertEqual(result['pageNumber'], 2)
+        self.assertEqual(result['pageSize'], 50)
+        self.assertEqual(result['sortBy'], 'name')
+        self.assertEqual(result['sortDir'], 'desc')
+        self.assertEqual(result['search'], 'example')
 
     def test_missing_parameters(self):
-        self.assertRaises(TypeError, function_name)
+        result = my_function(
+            PARAM_PAGE_NUMBER=2,
+            PARAM_PAGE_SIZE=50,
+            PARAM_SORT_BY='name'
+        )
+        self.assertEqual(result['pageNumber'], 2)
+        self.assertEqual(result['pageSize'], 50)
+        self.assertEqual(result['sortBy'], 'name')
+        self.assertEqual(result['sortDir'], 'asc')
+        self.assertEqual(result['search'], '')
 
     def test_invalid_parameters(self):
-        invalid_pageNumber = 'invalid'
-        invalid_pageSize = 'invalid'
-        invalid_sortBy = 123
-        invalid_sortDir = True
-        invalid_search = None
-
-        self.assertRaises(TypeError, function_name, invalid_pageNumber, pageSize, sortBy, sortDir, search)
-        self.assertRaises(TypeError, function_name, pageNumber, invalid_pageSize, sortBy, sortDir, search)
-        self.assertRaises(TypeError, function_name, pageNumber, pageSize, invalid_sortBy, sortDir, search)
-        self.assertRaises(TypeError, function_name, pageNumber, pageSize, sortBy, invalid_sortDir, search)
-        self.assertRaises(TypeError, function_name, pageNumber, pageSize, sortBy, sortDir, invalid_search)
+        with self.assertRaises(ValueError):
+            my_function(pageNumber=0)
+        
+        with self.assertRaises(ValueError):
+            my_function(pageSize=0)
+        
+        with self.assertRaises(ValueError):
+            my_function(sortDir='invalid')
 
 if __name__ == '__main__':
     unittest.main()

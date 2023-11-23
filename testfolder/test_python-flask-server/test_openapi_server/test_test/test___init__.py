@@ -1,49 +1,53 @@
 from python-flask-server.openapi_server.test.__init__ import *
-import logging
 import unittest
+import logging
+
 import connexion
 from flask_testing import TestCase
+
 from openapi_server.encoder import JSONEncoder
 
-class TestBase(TestCase):
-    def create_app(self):
-        logging.getLogger('connexion.operation').setLevel('ERROR')
-        app = connexion.App(__name__, specification_dir='../openapi/')
-        app.app.json_encoder = JSONEncoder
-        app.add_api('openapi.yaml', pythonic_params=True)
-        return app.app
 
-class TestAPI(TestBase):
+class TestBaseCase(unittest.TestCase):
+
     def test_create_app(self):
         """
-        Test that the app is created correctly
+        Test that the create_app function returns a Flask app instance.
         """
-        self.assertIsNotNone(self.create_app())
+        base_test_case = TestCase()
+        app = base_test_case.create_app()
+        self.assertIsInstance(app, connexion.FlaskApp)
 
-    def test_json_encoder(self):
+    def test_create_app_logging(self):
         """
-        Test that the JSONEncoder is correctly set on the app
+        Test that the create_app function sets the logging level of the connexion operation logger to ERROR.
         """
-        app = self.create_app()
+        base_test_case = TestCase()
+        base_test_case.create_app()
+        logger = logging.getLogger('connexion.operation')
+        self.assertEqual(logger.getEffectiveLevel(), logging.ERROR)
+
+    def test_create_app_json_encoder(self):
+        """
+        Test that the create_app function sets the JSONEncoder as the Flask app's JSON encoder.
+        """
+        base_test_case = TestCase()
+        app = base_test_case.create_app()
         self.assertIsInstance(app.json_encoder, JSONEncoder)
 
-    def test_add_api(self):
+    def test_create_app_add_api(self):
         """
-        Test that the API is correctly added to the app
+        Test that the create_app function adds the API defined in the openapi.yaml file to the Flask app.
         """
-        app = self.create_app()
-        self.assertIsNotNone(app.url_map)
+        base_test_case = TestCase()
+        app = base_test_case.create_app()
+        self.assertIn('openapi.yaml', app.blueprints)
 
-    def test_logging(self):
+    def test_create_app_pythonic_params(self):
         """
-        Test that the logging level is set correctly
+        Test that the create_app function sets the pythonic_params flag to True when adding the API to the Flask app.
         """
-        logger = logging.getLogger('connexion.operation')
-        self.assertEqual(logger.level, logging.ERROR)
-
-    def test_pythonic_params(self):
-        """
-        Test that pythonic_params is set correctly
-        """
-        app = self.create_app()
-        self.assertTrue(app.config['PYTHONIC_PARAMS'])
+        base_test_case = TestCase()
+        app = base_test_case.create_app()
+        blueprint = app.blueprints['openapi.yaml']
+        self.assertTrue(blueprint.options.get('pythonic_params', False))
