@@ -1,35 +1,35 @@
 from python-flask-server.openapi_server.utils.constants import *
 import unittest
+from code_snippet import *
 
-class TestParameters(unittest.TestCase):
-    def test_default_parameters(self):
+class TestParams(unittest.TestCase):
+    
+    def test_default_params(self):
         self.assertEqual(pageNumber, 1)
         self.assertEqual(pageSize, 100)
         self.assertEqual(sortBy, 'id')
         self.assertEqual(sortDir, 'asc')
         self.assertEqual(search, '')
-    
-    def test_page_number_parameter(self):
-        global pageNumber
-        pageNumber = 2
+
+    def test_update_params(self):
+        update_params(PARAM_PAGE_NUMBER, 2)
         self.assertEqual(pageNumber, 2)
-    
-    def test_page_size_parameter(self):
-        global pageSize
-        pageSize = 50
+
+        update_params(PARAM_PAGE_SIZE, 50)
         self.assertEqual(pageSize, 50)
-    
-    def test_sort_by_parameter(self):
-        global sortBy
-        sortBy = 'name'
+
+        update_params(PARAM_SORT_BY, 'name')
         self.assertEqual(sortBy, 'name')
-    
-    def test_sort_dir_parameter(self):
-        global sortDir
-        sortDir = 'desc'
+
+        update_params(PARAM_SORT_DIR, 'desc')
         self.assertEqual(sortDir, 'desc')
-    
-    def test_search_parameter(self):
-        global search
-        search = 'test'
+
+        update_params(PARAM_SEARCH, 'test')
         self.assertEqual(search, 'test')
+
+    def test_invalid_params(self):
+        with self.assertRaises(ValueError):
+            update_params('invalid_param', 1)
+
+if __name__ == '__main__':
+    unittest.main()
