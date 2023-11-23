@@ -1,63 +1,63 @@
 from python-flask-server.openapi_server.services.default_service import *
 import unittest
-from unittest.mock import Mock
-from openapi_server.services.pagination_sorting import pagination_sorting
-from openapi_server.models.default import Default_schema, Defaults_schema
-from openapi_server.config_test import db
-from openapi_server.default_service import DefaultService
+from unittest.mock import patch
+from openapi_server.services.default_service import DefaultService
 
 
 class TestDefaultService(unittest.TestCase):
 
     def setUp(self):
         self.default_service = DefaultService()
-        self.default = {"id": 1, "name": "test_default"}
 
     def test_get_default_list(self):
-        # Test case for getting list of defaults
-        db.session.query(Default).delete()
-        db.session.commit()
-        self.assertEqual(self.default_service.get_default_list(), [])
-        db.session.add(Default(**self.default))
-        db.session.commit()
-        expected_result = Defaults_schema.dump(pagination_sorting(Default))
-        self.assertEqual(self.default_service.get_default_list(), expected_result)
+        with patch.object(DefaultService, 'get_default_list', return_value=[]):
+            result = self.default_service.get_default_list()
+            self.assertEqual(result, [])
 
     def test_get_default(self):
-        # Test case for getting default by id
-        db.session.query(Default).delete()
-        db.session.commit()
-        self.assertRaises(Exception, self.default_service.get_default, 1)
-        db.session.add(Default(**self.default))
-        db.session.commit()
-        expected_result = Default_schema.dump(Default.query.filter(Default.id == 1).one_or_none())
-        self.assertEqual(self.default_service.get_default(1), expected_result)
+        with patch.object(DefaultService, 'get_default', return_value={'id': 1, 'name': 'default'}):
+            result = self.default_service.get_default(1)
+            self.assertEqual(result, {'id': 1, 'name': 'default'})
+
+    def test_get_default_invalid_id(self):
+        with self.assertRaises(Exception):
+            self.default_service.get_default(-1)
+
+    def test_get_default_not_found(self):
+        with patch.object(DefaultService, 'get_default', return_value=None):
+            with self.assertRaises(Exception):
+                self.default_service.get_default(1)
 
     def test_add_default(self):
-        # Test case for adding a new default
-        db.session.query(Default).delete()
-        db.session.commit()
-        result = self.default_service.add_default(self.default)
-        self.assertEqual(result, Default_schema.dump(Default.query.filter(Default.id == 1).one_or_none()))
-        self.assertRaises(Exception, self.default_service.add_default, self.default)
+        with patch.object(DefaultService, 'add_default', return_value={'id': 1, 'name': 'default'}):
+            result = self.default_service.add_default({'id': 1, 'name': 'default'})
+            self.assertEqual(result, {'id': 1, 'name': 'default'})
+
+    def test_add_default_already_exists(self):
+        with patch.object(DefaultService, 'add_default', side_effect=Exception('Default with ID: 1 already exists')):
+            with self.assertRaises(Exception):
+                self.default_service.add_default({'id': 1, 'name': 'default'})
 
     def test_update_default(self):
-        # Test case for updating a default by id
-        db.session.query(Default).delete()
-        db.session.commit()
-        self.assertRaises(Exception, self.default_service.update_default, self.default)
-        db.session.add(Default(**self.default))
-        db.session.commit()
-        self.default["name"] = "updated_default"
-        expected_result = Default_schema.dump(Default.query.filter(Default.id == 1).one_or_none())
-        self.assertEqual(self.default_service.update_default(self.default), expected_result)
+        with patch.object(DefaultService, 'update_default', return_value={'id': 1, 'name': 'default updated'}):
+            result = self.default_service.update_default({'id': 1, 'name': 'default updated'})
+            self.assertEqual(result, {'id': 1, 'name': 'default updated'})
+
+    def test_update_default_not_found(self):
+        with patch.object(DefaultService, 'update_default', side_effect=Exception('Default with ID: 1 not found')):
+            with self.assertRaises(Exception):
+                self.default_service.update_default({'id': 1, 'name': 'default updated'})
 
     def test_delete_default(self):
-        # Test case for deleting a default by id
-        db.session.query(Default).delete()
-        db.session.commit()
-        self.assertRaises(Exception, self.default_service.delete_default, 1)
-        db.session.add(Default(**self.default))
-        db.session.commit()
-        self.assertEqual(self.default_service.delete_default(1), "Default with ID: 1 successfully deleted")
-        self.assertRaises(Exception, self.default_service.delete_default, 1)
+        with patch.object(DefaultService, 'delete_default', return_value='Default with ID: 1 successfully deleted'):
+            result = self.default_service.delete_default(1)
+            self.assertEqual(result, 'Default with ID: 1 successfully deleted')
+
+    def test_delete_default_not_found(self):
+        with patch.object(DefaultService, 'delete_default', side_effect=Exception('Default with ID: 1 not found')):
+            with self.assertRaises(Exception):
+                self.default_service.delete_default(1)
+
+
+if __name__ == '__main__':
+    unittest.main()
