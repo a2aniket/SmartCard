@@ -1,96 +1,101 @@
 import io.restassured.RestAssured;
-import io.restassured.authentication.BasicAuthScheme;
+import io.restassured.authentication.AuthenticationScheme;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 
-public class APIEndpointTest {
+public class APITest {
 
-    @BeforeClass
-    public void setup() {
-        RestAssured.baseURI = "https://reqres.in/api";
-    }
-
+    // Test 1
     @Test
     public void testGetUser() {
+        RestAssured.baseURI = "https://reqres.in/api";
         given()
                 .when()
                 .get("/users/2")
                 .then()
-                .statusCode(200)
+                .assertThat().statusCode(200)
                 .body("data.first_name", equalTo("Janet"));
     }
 
+    // Test 2
     @Test
     public void testCreateUser() {
+        RestAssured.baseURI = "https://reqres.in/api";
+        String request = "{\"name\": \"Sam\", \"job\": \"Project Leader\"}";
         given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"Sam\", \"job\": \"Project Leader\"}")
+                .header("Content-Type", "application/json")
+                .body(request)
                 .when()
                 .post("/users")
                 .then()
-                .statusCode(201)
+                .assertThat().statusCode(201)
                 .body("name", equalTo("Sam"))
                 .body("job", containsString("Leader"));
     }
 
+    // Test 3
     @Test
     public void testUpdateUser() {
+        RestAssured.baseURI = "https://reqres.in/api";
+        String request = "{\"name\": \"Isha\", \"job\": \"Software Engineer\"}";
         given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"Isha\", \"job\": \"Software Engineer\"}")
+                .header("Content-Type", "application/json")
+                .body(request)
                 .when()
                 .put("/users/2")
                 .then()
-                .statusCode(200);
+                .assertThat().statusCode(200);
     }
 
+    // Test 4
     @Test
     public void testDeleteUser() {
+        RestAssured.baseURI = "https://reqres.in/api";
         given()
                 .when()
                 .delete("/users/2")
                 .then()
-                .statusCode(204);
+                .assertThat().statusCode(204);
     }
 
+    // Test 5
     @Test
-    public void testGetUsersWithQuery() {
+    public void testGetUsersWithPageQueryParameter() {
+        RestAssured.baseURI = "https://reqres.in/api";
         given()
-                .queryParam("page", "2")
+                .param("page", "2")
                 .when()
                 .get("/users")
                 .then()
-                .statusCode(200);
+                .assertThat().statusCode(200);
     }
 
+    // Test 6
     @Test
-    public void testGetUserByIdWithPathParam() {
+    public void testGetUserWithIdPathParam() {
+        RestAssured.baseURI = "https://reqres.in/api";
         given()
                 .pathParam("id", "3")
                 .when()
                 .get("/users/{id}")
                 .then()
-                .statusCode(200)
+                .assertThat().statusCode(200)
                 .body("data.last_name", equalTo("Wong"));
     }
 
+    // Test 7
     @Test
-    public void testRegisterWithBasicAuth() {
-        BasicAuthScheme basicAuthScheme = new BasicAuthScheme();
-        basicAuthScheme.setUserName("username");
-        basicAuthScheme.setPassword("password");
-
+    public void testRegisterUserWithBasicAuth() {
+        RestAssured.baseURI = "https://reqres.in/api";
         given()
-                .auth()
-                .basic("username", "password")
+                .auth().basic("username", "password")
                 .when()
                 .post("/register")
                 .then()
-                .statusCode(400);
+                .assertThat().statusCode(400);
     }
 }
