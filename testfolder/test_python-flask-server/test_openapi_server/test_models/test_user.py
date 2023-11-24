@@ -7,25 +7,26 @@ from openapi_server.models.user import User, UserSchema
 class TestUser(unittest.TestCase):
 
     def setUp(self):
-        self.user1 = User(username="user1", password="password1")
-        db.session.add(self.user1)
-        db.session.commit()
+        self.user = User('testUser', 'testPass')
 
     def test_set_password(self):
-        self.user1.set_password("newpassword")
-        self.assertTrue(check_password_hash(self.user1.password, "newpassword"))
+        self.assertIsNotNone(self.user.password)
+        self.assertNotEqual(self.user.password, 'testPass')
 
     def test_check_password(self):
-        self.assertTrue(self.user1.check_password("password1"))
-        self.assertFalse(self.user1.check_password("wrongpassword"))
+        self.assertTrue(self.user.check_password('testPass'))
+        self.assertFalse(self.user.check_password('wrongPass'))
 
     def test_to_dict(self):
-        user_dict = self.user1.to_dict()
-        self.assertEqual(user_dict['id'], self.user1.id)
-        self.assertEqual(user_dict['username'], self.user1.username)
+        expected_dict = {'id': self.user.id, 'username': 'testUser'}
+        self.assertEqual(self.user.to_dict(), expected_dict)
 
-    def test_user_schema(self):
+    def test_UserSchema(self):
         user_schema = UserSchema()
-        user = user_schema.load({'username': 'user2', 'password': 'password2'})
-        self.assertEqual(user.username, 'user2')
-        self.assertEqual(check_password_hash(user.password, 'password2'), True)
+        loaded_user = user_schema.load({'username': 'testUser', 'password': 'testPass'})
+        self.assertIsInstance(loaded_user, User)
+        self.assertEqual(loaded_user.username, 'testUser')
+        self.assertIsNotNone(loaded_user.password)
+
+if __name__ == '__main__':
+    unittest.main()

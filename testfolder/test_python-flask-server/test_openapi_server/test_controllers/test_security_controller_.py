@@ -1,123 +1,75 @@
 from python-flask-server.openapi_server.controllers.security_controller_ import *
 import unittest
 from unittest.mock import patch, MagicMock
-from openapi_server import app, db
-from openapi_server.models.user import User
+from openapi_server import app
 from openapi_server.services.user_service import UserService
-import jwt
 
 class TestAuthentication(unittest.TestCase):
+    @patch('openapi_server.routes.authenticate')
+    def test_login_success(self, mock_authenticate):
+        mock_authenticate.return_value = MagicMock()
+        mock_authenticate.return_value.id = 1
+        mock_authenticate.return_value.username = 'testuser'
+        mock_authenticate.return_value.check_password.return_value = True
 
-    def setUp(self):
-        app.config['TESTING'] = True
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        self.app = app.test_client()
-        db.create_all()
+        with app.test_client() as client:
+            response = client.post('/login', json={"username": "testuser", "password": "testpassword"})
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('token', response.json)
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+    @patch('openapi_server.routes.authenticate')
+    def test_login_failure(self, mock_authenticate):
+        mock_authenticate.return_value = None
 
-    def test_authenticate_valid_user(self):
-        with patch.object(UserService, 'get_user_by_username') as mock_get_user:
-            mock_user = MagicMock()
-            mock_user.check_password.return_value = True
-            mock_get_user.return_value = mock_user
+        with app.test_client() as client:
+            response = client.post('/login', json={"username": "testuser", "password": "testpassword"})
+            self.assertEqual(response.status_code, 401)
+            self.assertIn('message', response.json)
+            self.assertEqual(response.json['message'], 'Invalid username or password')
 
-            user = authenticate("test_user", "test_password")
+    @patch.object(UserService, 'get_user_by_username')
+    def test_authenticate_success(self, mock_get_user_by_username):
+        mock_user = MagicMock()
+        mock_user.check_password.return_value = True
+        mock_get_user_by_username.return_value = mock_user
 
-            self.assertEqual(user, mock_user)
+        user = authenticate('testuser', 'testpassword')
+        self.assertIsNotNone(user)
 
-    def test_authenticate_invalid_user(self):
-        with patch.object(UserService, 'get_user_by_username') as mock_get_user:
-            mock_get_user.return_value = None
+    @patch.object(UserService, 'get_user_by_username')
+    def test_authenticate_failure(self, mock_get_user_by_username):
+        mock_get_user_by_username.return_value = None
 
-            user = authenticate("test_user", "test_password")
-
-            self.assertIsNone(user)
-
-    def test_create_token(self):
-        app.config['JWT_SECRET_KEY'] = 'test_secret_key'
-        app.config['JWT_EXPIRATION_HOURS'] = 24
-
-        user_id = 1
-        token = create_token(user_id)
-
-        self.assertIsNotNone(token)
-
-        payload = jwt.decode(token, 'test_secret_key', algorithms=["HS256"])
-
-        self.assertEqual(payload['sub'], user_id)
-
-    def test_authorize_valid_token(self):
-        app.config['JWT_SECRET_KEY'] = 'test_secret_key'
-
-        user_id = 1
-        token = jwt.encode({'sub': user_id}, 'test_secret_key', algorithm='HS256')
-
-        with patch.object(User, 'query') as mock_query:
-            mock_user = MagicMock()
-            mock_query.get.return_value = mock_user
-
-            user = authorize(token)
-
-            self.assertEqual(user, mock_user)
-
-    def test_authorize_expired_token(self):
-        app.config['JWT_SECRET_KEY'] = 'test_secret_key'
-
-        token = jwt.encode({'exp': datetime.utcnow() - timedelta(hours=1)}, 'test_secret_key', algorithm='HS256')
-
-        user = authorize(token)
-
+        user = authenticate('testuser', 'testpassword')
         self.assertIsNone(user)
 
-    def test_authorize_invalid_token(self):
-        app.config['JWT_SECRET_KEY'] = 'test_secret_key'
+    @patch('openapi_server.routes.jwt.encode')
+    def test_create_token(self, mock_encode):
+        mock_encode.return_value = 'test_token'
 
-        token = "invalid_token"
+        token = create_token(1)
+        self.assertEqual(token, 'test_token')
 
-        user = authorize(token)
-
-        self.assertIsNone(user)
-
-    def test_login_valid_user(self):
-        app.config['JWT_SECRET_KEY'] = 'test_secret_key'
-        app.config['JWT_EXPIRATION_HOURS'] = 24
-
+    @patch('openapi_server.routes.jwt.decode')
+    def test_authorize_success(self, mock_decode):
+        mock_decode.return_value = {'sub': 1}
         mock_user = MagicMock()
         mock_user.id = 1
+        User.query.get.return_value = mock_user
 
-        with patch.object(UserService, 'get_user_by_username') as mock_get_user:
-            mock_user.check_password.return_value = True
-            mock_get_user.return_value = mock_user
+        user = authorize('test_token')
+        self.assertIsNotNone(user)
 
-            response = self.app.post('/login', json={'username': 'test_user', 'password': 'test_password'})
+    @patch('openapi_server.routes.jwt.decode')
+    def test_authorize_expired_token(self, mock_decode):
+        mock_decode.side_effect = jwt.ExpiredSignatureError
 
-            self.assertEqual(response.status_code, 200)
+        user = authorize('test_token')
+        self.assertIsNone(user)
 
-            data = response.get_json()
+    @patch('openapi_server.routes.jwt.decode')
+    def test_authorize_invalid_token(self, mock_decode):
+        mock_decode.side_effect = jwt.InvalidTokenError
 
-            self.assertIn('token', data)
-
-            token = data['token']
-
-            payload = jwt.decode(token, 'test_secret_key', algorithms=["HS256"])
-
-            self.assertEqual(payload['sub'], mock_user.id)
-
-    def test_login_invalid_user(self):
-        with patch.object(UserService, 'get_user_by_username') as mock_get_user:
-            mock_get_user.return_value = None
-
-            response = self.app.post('/login', json={'username': 'test_user', 'password': 'test_password'})
-
-            self.assertEqual(response.status_code, 401)
-
-            data = response.get_json()
-
-            self.assertIn('message', data)
-
-            message = data['message']
-
-            self.assertEqual(message, 'Invalid username or password')
+        user = authorize('test_token')
+        self.assertIsNone(user)

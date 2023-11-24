@@ -3,33 +3,39 @@ import unittest
 from openapi_server import app
 
 
-class TestUserEndpoints(unittest.TestCase):
+class TestUserAPI(unittest.TestCase):
 
     def test_create_user(self):
         with app.test_client() as client:
-            # Test creating a user successfully
-            user_data = {'username': 'test_user', 'password': 'password'}
-            response = client.post('/users', json=user_data)
+            # Test case 1: Valid request, should return 201 status code and user object
+            data = {'username': 'testuser', 'password': 'testpassword'}
+            response = client.post('/users', json=data)
             self.assertEqual(response.status_code, 201)
-            self.assertIn('test_user', str(response.data))
+            self.assertEqual(response.json['username'], 'testuser')
+            self.assertEqual(response.json['password'], 'testpassword')
 
-            # Test creating a user with missing data
-            user_data = {'username': 'test_user'}
-            response = client.post('/users', json=user_data)
+            # Test case 2: Invalid request, missing username, should return 400 status code
+            data = {'password': 'testpassword'}
+            response = client.post('/users', json=data)
             self.assertEqual(response.status_code, 400)
-            self.assertIn('error', str(response.data))
+
+            # Test case 3: Invalid request, missing password, should return 400 status code
+            data = {'username': 'testuser'}
+            response = client.post('/users', json=data)
+            self.assertEqual(response.status_code, 400)
 
     def test_get_user_by_username(self):
         with app.test_client() as client:
-            # Test getting an existing user
-            response = client.get('/users/test_user')
+            # Test case 1: Valid username, should return 200 status code and user object
+            response = client.get('/users/testuser')
             self.assertEqual(response.status_code, 200)
-            self.assertIn('test_user', str(response.data))
+            self.assertEqual(response.json['username'], 'testuser')
+            self.assertEqual(response.json['password'], 'testpassword')
 
-            # Test getting a non-existing user
-            response = client.get('/users/non_existing_user')
+            # Test case 2: Invalid username, should return 404 status code and error message
+            response = client.get('/users/nonexistentuser')
             self.assertEqual(response.status_code, 404)
-            self.assertIn('User not found', str(response.data))
+            self.assertEqual(response.json['message'], 'User not found')
 
 
 if __name__ == '__main__':

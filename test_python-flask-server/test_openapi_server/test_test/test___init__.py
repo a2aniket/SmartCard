@@ -1,13 +1,14 @@
 from python-flask-server.openapi_server.test.__init__ import *
 import unittest
 import logging
+
 import connexion
 from flask_testing import TestCase
+
 from openapi_server.encoder import JSONEncoder
 
 
-class BaseTestCase(TestCase):
-
+class TestBaseTestCase(TestCase):
     def create_app(self):
         logging.getLogger('connexion.operation').setLevel('ERROR')
         app = connexion.App(__name__, specification_dir='../openapi/')
@@ -15,30 +16,27 @@ class BaseTestCase(TestCase):
         app.add_api('openapi.yaml', pythonic_params=True)
         return app.app
 
+    def test_create_app(self):
+        # Test if the app is created successfully
+        app = self.create_app()
+        self.assertIsNotNone(app)
 
-class TestBaseTestCase(unittest.TestCase):
+    def test_logging(self):
+        # Test if logging is set to ERROR level
+        logger = logging.getLogger('connexion.operation')
+        self.assertEqual(logger.level, logging.ERROR)
 
-    def setUp(self):
-        self.app = BaseTestCase().create_app()
-        self.client = self.app.test_client()
-
-    def test_logging_level(self):
-        self.assertEqual(logging.getLogger('connexion.operation').getEffectiveLevel(), logging.ERROR)
-
-    def test_app_json_encoder(self):
-        self.assertIsInstance(self.app.json_encoder, JSONEncoder)
+    def test_json_encoder(self):
+        # Test if JSONEncoder is used for JSON encoding
+        app = self.create_app()
+        self.assertIsInstance(app.json_encoder, JSONEncoder)
 
     def test_add_api(self):
-        self.assertIn('openapi.yaml', self.app.extensions['flask-connexion']['specs'][0]['spec']['info']['title'])
+        # Test if API is added successfully
+        app = self.create_app()
+        self.assertIsNotNone(app.url_map)
 
     def test_pythonic_params(self):
-        self.assertTrue(self.app.extensions['flask-connexion']['pythonic_params'])
-
-    def test_api_call(self):
-        response = self.client.get('/api/v1/test')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'"message": "Test successful"', response.data)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        # Test if pythonic_params is set to True
+        app = self.create_app()
+        self.assertTrue(app.config['PYTHONIC_PARAMS'])

@@ -1,102 +1,120 @@
 from python-flask-server.openapi_server.services.default_service import *
 import unittest
-from unittest.mock import MagicMock
-from openapi_server.services.pagination_sorting import pagination_sorting
-from openapi_server.models.default import Default_schema, Defaults_schema
-from openapi_server.config_test import db
-from openapi_server import app
-from flask import json
+from unittest.mock import Mock, patch
+from openapi_server.services.default_service import DefaultService
+
 
 class TestDefaultService(unittest.TestCase):
 
-    # Test for retrieving a list of defaults
-    def test_get_default_list(self):
-        with app.app_context():
-            # Mocking pagination_sorting function
-            pagination_sorting = MagicMock(return_value=[{"id": 1, "name": "Default 1", "amount": 100}])
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_get_default_list_success(self, mock_query):
+        mock_default = Mock()
+        mock_default.id = 1
+        mock_default.name = "default"
 
-            # Calling the function under test
-            result = app.DefaultService.get_default_list()
+        mock_query.filter_by.return_value.order_by.return_value.paginate.return_value.items = [mock_default]
 
-            # Verifying the returned result
-            self.assertEqual(result.status_code, 200)
-            self.assertEqual(result.content_type, "application/json")
-            self.assertEqual(json.loads(result.data), Defaults_schema.dump([{"id": 1, "name": "Default 1", "amount": 100}]))
-            pagination_sorting.assert_called_once_with(Default)
+        result = DefaultService.get_default_list()
 
-    # Test for retrieving a default by ID
-    def test_get_default(self):
-        with app.app_context():
-            # Adding a default to the database
-            default = {"id": 1, "name": "Default 1", "amount": 100}
-            app.DefaultService.add_default(default)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['id'], 1)
+        self.assertEqual(result[0]['name'], 'default')
 
-            # Calling the function under test
-            result = app.DefaultService.get_default(1)
+    @patch('openapi_server.services.default_service.abort')
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_get_default_list_no_defaults(self, mock_query, mock_abort):
+        mock_query.filter_by.return_value.order_by.return_value.paginate.return_value.items = []
 
-            # Verifying the returned result
-            self.assertEqual(result.status_code, 200)
-            self.assertEqual(result.content_type, "application/json")
-            self.assertEqual(json.loads(result.data), Default_schema.dump({"id": 1, "name": "Default 1", "amount": 100}))
+        DefaultService.get_default_list()
 
-    # Test for adding a new default
-    def test_add_default(self):
-        with app.app_context():
-            # Mocking load function of Default_schema
-            Default_schema.load = MagicMock(return_value={"id": 1, "name": "Default 1", "amount": 100})
+        mock_abort.assert_called_with(404, "No default found")
 
-            # Calling the function under test
-            result = app.DefaultService.add_default({"id": 1, "name": "Default 1", "amount": 100})
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_get_default_success(self, mock_query):
+        mock_default = Mock()
+        mock_default.id = 1
+        mock_default.name = "default"
 
-            # Verifying the returned result
-            self.assertEqual(result.status_code, 200)
-            self.assertEqual(result.content_type, "application/json")
-            self.assertEqual(json.loads(result.data), Default_schema.dump({"id": 1, "name": "Default 1", "amount": 100}))
-            Default_schema.load.assert_called_once_with({"id": 1, "name": "Default 1", "amount": 100}, session=db.session)
+        mock_query.filter.return_value.one_or_none.return_value = mock_default
 
-            # Adding the same default again to check if it raises 400 error
-            with self.assertRaises(Exception) as context:
-                app.DefaultService.add_default({"id": 1, "name": "Default 1", "amount": 100})
-            self.assertEqual(str(context.exception), "Default with ID: 1 already exists")
+        result = DefaultService.get_default(1)
 
-    # Test for updating an existing default
-    def test_update_default(self):
-        with app.app_context():
-            # Adding a default to the database
-            default = {"id": 1, "name": "Default 1", "amount": 100}
-            app.DefaultService.add_default(default)
+        self.assertEqual(result['id'], 1)
+        self.assertEqual(result['name'], 'default')
 
-            # Mocking load function of Default_schema
-            Default_schema.load = MagicMock(return_value={"id": 1, "name": "Default 1 Updated", "amount": 200})
+    @patch('openapi_server.services.default_service.abort')
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_get_default_invalid_id(self, mock_query, mock_abort):
+        result = DefaultService.get_default(-1)
 
-            # Calling the function under test
-            result = app.DefaultService.update_default({"id": 1, "name": "Default 1 Updated", "amount": 200})
+        mock_abort.assert_called_with(404, "Default with ID: -1 does not exist")
 
-            # Verifying the returned result
-            self.assertEqual(result.status_code, 200)
-            self.assertEqual(result.content_type, "application/json")
-            self.assertEqual(json.loads(result.data), Default_schema.dump({"id": 1, "name": "Default 1 Updated", "amount": 200}))
-            Default_schema.load.assert_called_once_with({"id": 1, "name": "Default 1 Updated", "amount": 200}, session=db.session)
+    @patch('openapi_server.services.default_service.abort')
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_get_default_not_found(self, mock_query, mock_abort):
+        mock_query.filter.return_value.one_or_none.return_value = None
 
-            # Updating a non-existing default
-            with self.assertRaises(Exception) as context:
-                app.DefaultService.update_default({"id": 2, "name": "Default 2", "amount": 300})
-            self.assertEqual(str(context.exception), "Default with ID: 2 not found")
+        DefaultService.get_default(1)
 
-    # Test for deleting a default
-    def test_delete_default(self):
-        with app.app_context():
-            # Adding a default to the database
-            default = {"id": 1, "name": "Default 1", "amount": 100}
-            app.DefaultService.add_default(default)
+        mock_abort.assert_called_with(404, "Default with ID: 1 does not exist")
 
-            # Calling the function under test
-            result = app.DefaultService.delete_default(1)
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_add_default_success(self, mock_query):
+        mock_default = {'id': 1, 'name': 'default'}
 
-            # Verifying the returned result
-            self.assertEqual(result, "Default with ID: 1 successfully deleted")
+        mock_query.filter.return_value.one_or_none.return_value = None
 
-            # Deleting a non-existing default
-            with self.assertRaises(Exception) as context:
-                app.DefaultService.delete_default(2)
-            self.assertEqual(str(context.exception), "Default with ID: 2 not found")
+        result = DefaultService.add_default(mock_default)
+
+        self.assertEqual(result['id'], 1)
+        self.assertEqual(result['name'], 'default')
+
+    @patch('openapi_server.services.default_service.abort')
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_add_default_already_exists(self, mock_query, mock_abort):
+        mock_default = {'id': 1, 'name': 'default'}
+
+        mock_query.filter.return_value.one_or_none.return_value = Mock()
+
+        DefaultService.add_default(mock_default)
+
+        mock_abort.assert_called_with(400, "Default with ID: 1 already exists")
+
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_update_default_success(self, mock_query):
+        mock_default = {'id': 1, 'name': 'default'}
+
+        mock_query.filter.return_value.one_or_none.return_value = Mock()
+
+        result = DefaultService.update_default(mock_default)
+
+        self.assertEqual(result['id'], 1)
+        self.assertEqual(result['name'], 'default')
+
+    @patch('openapi_server.services.default_service.abort')
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_update_default_not_found(self, mock_query, mock_abort):
+        mock_default = {'id': 1, 'name': 'default'}
+
+        mock_query.filter.return_value.one_or_none.return_value = None
+
+        DefaultService.update_default(mock_default)
+
+        mock_abort.assert_called_with(404, "Default with ID: 1 not found")
+
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_delete_default_success(self, mock_query):
+        mock_query.filter.return_value.one_or_none.return_value = Mock()
+
+        result = DefaultService.delete_default(1)
+
+        self.assertEqual(result, 'Default with ID: 1 successfully deleted')
+
+    @patch('openapi_server.services.default_service.abort')
+    @patch('openapi_server.services.default_service.Default.query')
+    def test_delete_default_not_found(self, mock_query, mock_abort):
+        mock_query.filter.return_value.one_or_none.return_value = None
+
+        DefaultService.delete_default(1)
+
+        mock_abort.assert_called_with(400, "Default with ID: 1 not found")

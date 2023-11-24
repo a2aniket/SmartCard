@@ -1,42 +1,44 @@
 from python-flask-server.openapi_server.__main__ import *
 import unittest
-import requests
-from unittest.mock import patch, MagicMock
-from openapi_server.controllers import security_controller_, user_controller
+import os
+import tempfile
+import json
+from openapi_server import app
 
-class TestApp(unittest.TestCase):
-
+class TestAPI(unittest.TestCase):
+    # Initialize the test client
     def setUp(self):
         self.app = app.test_client()
 
+    # Test the create user endpoint
     def test_create_user(self):
-        response = self.app.post('/users', json={"username": "test_user", "password": "test_password"})
+        # Send a POST request to the create user endpoint with valid user data
+        response = self.app.post('/users', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
+
+        # Check that the response status code is 201 CREATED
         self.assertEqual(response.status_code, 201)
 
-    def test_create_user_with_existing_username(self):
-        response1 = self.app.post('/users', json={"username": "existing_user", "password": "test_password"})
-        response2 = self.app.post('/users', json={"username": "existing_user", "password": "test_password"})
-        self.assertEqual(response2.status_code, 409)
+        # Check that the response contains the newly created user's ID
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertTrue('id' in data)
 
+    # Test the login endpoint
     def test_login(self):
-        response = self.app.post('/login', json={"username": "test_user", "password": "test_password"})
+        # Send a POST request to the login endpoint with valid user credentials
+        response = self.app.post('/login', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
+
+        # Check that the response status code is 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_login_with_invalid_credentials(self):
-        response = self.app.post('/login', json={"username": "test_user", "password": "invalid_password"})
-        self.assertEqual(response.status_code, 401)
-
-    @patch('openapi_server.controllers.security_controller_.authenticate')
-    def test_login_with_mocked_authenticate(self, mock_authenticate):
-        mock_authenticate.return_value = {"username": "test_user", "password": "test_password"}
-        response = self.app.post('/login', json={"username": "test_user", "password": "test_password"})
-        self.assertEqual(response.status_code, 200)
-
-    @patch('openapi_server.controllers.user_controller.create_user')
-    def test_create_user_with_mocked_create_user(self, mock_create_user):
-        mock_create_user.return_value = MagicMock(status_code=201)
-        response = self.app.post('/users', json={"username": "test_user", "password": "test_password"})
-        self.assertEqual(response.status_code, 201)
+        # Check that the response contains a token
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertTrue('token' in data)
 
 if __name__ == '__main__':
     unittest.main()

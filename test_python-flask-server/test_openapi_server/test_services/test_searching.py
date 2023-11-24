@@ -1,59 +1,70 @@
 from python-flask-server.openapi_server.services.searching import *
 import unittest
-from unittest.mock import Mock
-from my_module import searching
 
-class TestSearching(unittest.TestCase):
-
+class TestSearch(unittest.TestCase):
     def test_searching_with_empty_params(self):
-        mock_model = Mock()
-        mock_model.query = Mock()
-        result = searching("", mock_model)
-        self.assertEqual(result, mock_model.query)
+        search_params = ""
+        Model = None
+        result = searching(search_params, Model)
+        self.assertEqual(result, Model.query)
 
-    def test_searching_with_one_criterion(self):
-        mock_model = Mock()
-        mock_model.query = Mock()
-        mock_model.field = "field"
-        mock_model.val = "val"
-        search_params = "field = val"
-        result = searching(search_params, mock_model)
-        mock_model.query.filter.assert_called_with(mock_model.field == mock_model.val)
-        self.assertEqual(result, mock_model.query.filter())
+    def test_searching_with_single_criterion(self):
+        search_params = "name = 'John'"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.name == 'John')
+        self.assertEqual(result, expected_query)
 
     def test_searching_with_multiple_criteria(self):
-        mock_model = Mock()
-        mock_model.query = Mock()
-        mock_model.field1 = "field1"
-        mock_model.op1 = "<"
-        mock_model.val1 = 10
-        mock_model.field2 = "field2"
-        mock_model.op2 = "like"
-        mock_model.val2 = "%test%"
-        search_params = "field1 < 10;field2 like \"%test%\""
-        result = searching(search_params, mock_model)
-        mock_model.query.filter.assert_called_with(mock_model.field1 < mock_model.val1, mock_model.field2.like(mock_model.val2))
-        self.assertEqual(result, mock_model.query.filter())
+        search_params = "name = 'John'; age > 30; email like '%@example.com'"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.name == 'John',
+                                             Model.age > 30,
+                                             Model.email.like('%@example.com'))
+        self.assertEqual(result, expected_query)
 
-    def test_searching_with_BETWEEN_operator(self):
-        mock_model = Mock()
-        mock_model.query = Mock()
-        mock_model.field = "field"
-        mock_model.val1 = 10
-        mock_model.val2 = 20
-        search_params = "field BETWEEN 10AND20"
-        result = searching(search_params, mock_model)
-        mock_model.query.filter.assert_called_with(mock_model.field.between(mock_model.val1, mock_model.val2))
-        self.assertEqual(result, mock_model.query.filter())
+    def test_searching_with_less_than_operator(self):
+        search_params = "age < 30"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.age < 30)
+        self.assertEqual(result, expected_query)
 
-    def test_searching_with_invalid_operator(self):
-        mock_model = Mock()
-        mock_model.query = Mock()
-        mock_model.field = "field"
-        mock_model.val = "val"
-        search_params = "field ! val"
-        result = searching(search_params, mock_model)
-        self.assertEqual(result, mock_model.query)
+    def test_searching_with_greater_than_operator(self):
+        search_params = "age > 30"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.age > 30)
+        self.assertEqual(result, expected_query)
+
+    def test_searching_with_less_than_or_equal_to_operator(self):
+        search_params = "age <= 30"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.age <= 30)
+        self.assertEqual(result, expected_query)
+
+    def test_searching_with_greater_than_or_equal_to_operator(self):
+        search_params = "age >= 30"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.age >= 30)
+        self.assertEqual(result, expected_query)
+
+    def test_searching_with_like_operator(self):
+        search_params = "name like '%ohn'"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.name.like('%ohn'))
+        self.assertEqual(result, expected_query)
+
+    def test_searching_with_between_operator(self):
+        search_params = "age BETWEEN 20 AND 30"
+        Model = MyModel
+        result = searching(search_params, Model)
+        expected_query = Model.query.filter(Model.age.between(20, 30))
+        self.assertEqual(result, expected_query)
 
 if __name__ == '__main__':
     unittest.main()

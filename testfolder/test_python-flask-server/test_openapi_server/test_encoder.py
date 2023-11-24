@@ -5,39 +5,61 @@ from unittest.mock import MagicMock
 
 class TestJSONEncoder(unittest.TestCase):
 
-    def setUp(self):
-        self.encoder = JSONEncoder()
+    def test_default_should_return_dict(self):
+        # Arrange
+        json_encoder = JSONEncoder()
+        model_mock = MagicMock(spec=Model)
+        model_mock.openapi_types = {'attr1': 'str', 'attr2': 'int'}
+        model_mock.attribute_map = {'attr1': 'attribute1', 'attr2': 'attribute2'}
+        model_mock.attr1 = 'value1'
+        model_mock.attr2 = 10
 
-    def test_default_method_with_model_object(self):
-        mock_model = MagicMock(spec=Model)
-        mock_model.openapi_types = {'attr1': 'str', 'attr2': 'int'}
-        mock_model.attribute_map = {'attr1': 'attribute1', 'attr2': 'attribute2'}
-        mock_model.attr1 = 'test'
-        mock_model.attr2 = 123
-        expected_result = {'attribute1': 'test', 'attribute2': 123}
-        self.assertEqual(self.encoder.default(mock_model), expected_result)
+        # Act
+        result = json_encoder.default(model_mock)
 
-    def test_default_method_with_non_model_object(self):
-        non_model_object = {'key1': 'value1', 'key2': 'value2'}
-        expected_result = {'key1': 'value1', 'key2': 'value2'}
-        self.assertEqual(self.encoder.default(non_model_object), expected_result)
+        # Assert
+        expected_result = {'attribute1': 'value1', 'attribute2': 10}
+        self.assertEqual(result, expected_result)
 
-    def test_default_method_with_model_object_and_null_values(self):
-        mock_model = MagicMock(spec=Model)
-        mock_model.openapi_types = {'attr1': 'str', 'attr2': 'int'}
-        mock_model.attribute_map = {'attr1': 'attribute1', 'attr2': 'attribute2'}
-        mock_model.attr1 = 'test'
-        mock_model.attr2 = None
-        expected_result = {'attribute1': 'test'}
-        self.encoder.include_nulls = False
-        self.assertEqual(self.encoder.default(mock_model), expected_result)
+    def test_default_should_exclude_null_values(self):
+        # Arrange
+        json_encoder = JSONEncoder()
+        model_mock = MagicMock(spec=Model)
+        model_mock.openapi_types = {'attr1': 'str', 'attr2': 'int'}
+        model_mock.attribute_map = {'attr1': 'attribute1', 'attr2': 'attribute2'}
+        model_mock.attr1 = 'value1'
+        model_mock.attr2 = None
 
-    def test_default_method_with_model_object_and_null_values_included(self):
-        mock_model = MagicMock(spec=Model)
-        mock_model.openapi_types = {'attr1': 'str', 'attr2': 'int'}
-        mock_model.attribute_map = {'attr1': 'attribute1', 'attr2': 'attribute2'}
-        mock_model.attr1 = 'test'
-        mock_model.attr2 = None
-        expected_result = {'attribute1': 'test', 'attribute2': None}
-        self.encoder.include_nulls = True
-        self.assertEqual(self.encoder.default(mock_model), expected_result)
+        # Act
+        result = json_encoder.default(model_mock)
+
+        # Assert
+        expected_result = {'attribute1': 'value1'}
+        self.assertEqual(result, expected_result)
+
+    def test_default_should_call_flask_encoder_if_not_model_instance(self):
+        # Arrange
+        json_encoder = JSONEncoder()
+
+        # Act
+        result = json_encoder.default('test')
+
+        # Assert
+        self.assertEqual(result, FlaskJSONEncoder.default(json_encoder, 'test'))
+
+    def test_default_should_exclude_null_values_if_include_nulls_is_false(self):
+        # Arrange
+        json_encoder = JSONEncoder()
+        json_encoder.include_nulls = False
+        model_mock = MagicMock(spec=Model)
+        model_mock.openapi_types = {'attr1': 'str', 'attr2': 'int'}
+        model_mock.attribute_map = {'attr1': 'attribute1', 'attr2': 'attribute2'}
+        model_mock.attr1 = 'value1'
+        model_mock.attr2 = None
+
+        # Act
+        result = json_encoder.default(model_mock)
+
+        # Assert
+        expected_result = {'attribute1': 'value1'}
+        self.assertEqual(result, expected_result)

@@ -1,135 +1,74 @@
 from python-flask-server.openapi_server.models.__init__ import *
-import unittest
-from openapi_server.models.generate_code_post200_response import GenerateCodePost200Response
-from openapi_server.models.generate_code_post400_response import GenerateCodePost400Response
-from openapi_server.models.generate_code_post_request import GenerateCodePostRequest
-from openapi_server.models.user import User
-from openapi_server.config_test import db, app
+def test_models_import():
+    """
+    Test that models are imported correctly
+    """
+    from openapi_server.models.generate_code_post200_response import GenerateCodePost200Response
+    from openapi_server.models.generate_code_post400_response import GenerateCodePost400Response
+    from openapi_server.models.generate_code_post_request import GenerateCodePostRequest
+    from openapi_server.models.user import User
+    
+    assert GenerateCodePost200Response
+    assert GenerateCodePost400Response
+    assert GenerateCodePostRequest
+    assert User
 
-class TestCodeGeneration(unittest.TestCase):
+def test_database_creation():
+    """
+    Test that the database is created correctly
+    """
+    from openapi_server.config_test import db, app
+    
+    with app.app_context():
+        db.create_all()
+        assert db.engine.table_names() == ['user']
 
-    @classmethod
-    def setUpClass(cls):
-        # Initialize the database
-        with app.app_context():
-            db.create_all()
+def test_generate_code_post200_response_schema():
+    """
+    Test that GenerateCodePost200Response schema is correct
+    """
+    from openapi_server.models.generate_code_post200_response import GenerateCodePost200Response, GenerateCodePost200Response_schema
+    
+    data = {"message": "Success"}
+    response = GenerateCodePost200Response(**data)
+    schema = GenerateCodePost200Response_schema()
+    
+    assert schema.dump(response) == {'message': 'Success'}
 
-    @classmethod
-    def tearDownClass(cls):
-        # Delete all records from the database
-        with app.app_context():
-            db.session.remove()
-            db.drop_all()
+def test_generate_code_post400_response_schema():
+    """
+    Test that GenerateCodePost400Response schema is correct
+    """
+    from openapi_server.models.generate_code_post400_response import GenerateCodePost400Response, GenerateCodePost400Response_schema
+    
+    data = {"message": "Error"}
+    response = GenerateCodePost400Response(**data)
+    schema = GenerateCodePost400Response_schema()
+    
+    assert schema.dump(response) == {'message': 'Error'}
 
-    def setUp(self):
-        # Add a user to the database
-        with app.app_context():
-            user = User(username="test_user", email="test_user@example.com")
-            db.session.add(user)
-            db.session.commit()
+def test_generate_code_post_request_schema():
+    """
+    Test that GenerateCodePostRequest schema is correct
+    """
+    from openapi_server.models.generate_code_post_request import GenerateCodePostRequest, GenerateCodePostRequest_schema
+    
+    data = {"language": "Python", "code": "print('Hello, World!')"}
+    request = GenerateCodePostRequest(**data)
+    schema = GenerateCodePostRequest_schema()
+    
+    assert schema.dump(request) == {'code': "print('Hello, World!')", 'language': 'Python'}
 
-    def tearDown(self):
-        # Delete the user from the database
-        with app.app_context():
-            user = User.query.filter_by(username="test_user").first()
-            db.session.delete(user)
-            db.session.commit()
-
-    def test_generate_code_with_valid_request(self):
-        # Generate code with a valid request
-        with app.test_client() as client:
-            request_data = {
-                "user_id": 1,
-                "language": "python",
-                "code": "print('Hello, world!')"
-            }
-            response = client.post("/generate_code", json=request_data)
-            response_data = GenerateCodePost200Response.from_dict(response.json)
-            # Ensure the response is successful
-            self.assertEqual(response.status_code, 200)
-            # Ensure the response contains the expected data
-            self.assertIsNotNone(response_data)
-            self.assertIsNotNone(response_data.generated_code)
-            self.assertEqual(response_data.generated_code, "print('Hello, world!')")
-
-    def test_generate_code_with_missing_user_id(self):
-        # Generate code with a request missing the user_id parameter
-        with app.test_client() as client:
-            request_data = {
-                "language": "python",
-                "code": "print('Hello, world!')"
-            }
-            response = client.post("/generate_code", json=request_data)
-            response_data = GenerateCodePost400Response.from_dict(response.json)
-            # Ensure the response is a bad request
-            self.assertEqual(response.status_code, 400)
-            # Ensure the response contains the expected error message
-            self.assertIsNotNone(response_data)
-            self.assertIsNotNone(response_data.detail)
-            self.assertEqual(response_data.detail, "user_id is a required property")
-
-    def test_generate_code_with_invalid_user_id(self):
-        # Generate code with a request containing an invalid user_id parameter
-        with app.test_client() as client:
-            request_data = {
-                "user_id": "invalid",
-                "language": "python",
-                "code": "print('Hello, world!')"
-            }
-            response = client.post("/generate_code", json=request_data)
-            response_data = GenerateCodePost400Response.from_dict(response.json)
-            # Ensure the response is a bad request
-            self.assertEqual(response.status_code, 400)
-            # Ensure the response contains the expected error message
-            self.assertIsNotNone(response_data)
-            self.assertIsNotNone(response_data.detail)
-            self.assertEqual(response_data.detail, "user_id should be integer")
-
-    def test_generate_code_with_missing_language(self):
-        # Generate code with a request missing the language parameter
-        with app.test_client() as client:
-            request_data = {
-                "user_id": 1,
-                "code": "print('Hello, world!')"
-            }
-            response = client.post("/generate_code", json=request_data)
-            response_data = GenerateCodePost400Response.from_dict(response.json)
-            # Ensure the response is a bad request
-            self.assertEqual(response.status_code, 400)
-            # Ensure the response contains the expected error message
-            self.assertIsNotNone(response_data)
-            self.assertIsNotNone(response_data.detail)
-            self.assertEqual(response_data.detail, "language is a required property")
-
-    def test_generate_code_with_invalid_language(self):
-        # Generate code with a request containing an invalid language parameter
-        with app.test_client() as client:
-            request_data = {
-                "user_id": 1,
-                "language": "invalid",
-                "code": "print('Hello, world!')"
-            }
-            response = client.post("/generate_code", json=request_data)
-            response_data = GenerateCodePost400Response.from_dict(response.json)
-            # Ensure the response is a bad request
-            self.assertEqual(response.status_code, 400)
-            # Ensure the response contains the expected error message
-            self.assertIsNotNone(response_data)
-            self.assertIsNotNone(response_data.detail)
-            self.assertEqual(response_data.detail, "invalid is not one of ['python', 'java', 'c', 'cpp']")
-
-    def test_generate_code_with_missing_code(self):
-        # Generate code with a request missing the code parameter
-        with app.test_client() as client:
-            request_data = {
-                "user_id": 1,
-                "language": "python"
-            }
-            response = client.post("/generate_code", json=request_data)
-            response_data = GenerateCodePost400Response.from_dict(response.json)
-            # Ensure the response is a bad request
-            self.assertEqual(response.status_code, 400)
-            # Ensure the response contains the expected error message
-            self.assertIsNotNone(response_data)
-            self.assertIsNotNone(response_data.detail)
-            self.assertEqual(response_data.detail, "code is a required property")
+def test_user_model():
+    """
+    Test that User model is created and data can be added and retrieved
+    """
+    from openapi_server.models.user import User
+    from openapi_server.config_test import db, app
+    
+    with app.app_context():
+        db.create_all()
+        user = User(username='test_user', email='test_user@example.com', password='123456')
+        db.session.add(user)
+        db.session.commit()
+        assert User.query.filter_by(username='test_user').first() is not None

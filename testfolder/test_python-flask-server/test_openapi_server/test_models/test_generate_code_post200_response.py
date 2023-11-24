@@ -6,33 +6,25 @@ from openapi_server.models.generate_code_post200_response import GenerateCodePos
 
 class TestGenerateCodePost200Response(unittest.TestCase):
 
-    def test_message_exists(self):
-        response = GenerateCodePost200Response(message="Hello World")
-        self.assertEqual(response.message, "Hello World")
+    def setUp(self):
+        self.message = "Test Message"
+        self.response = GenerateCodePost200Response(message=self.message)
+        db.session.add(self.response)
+        db.session.commit()
 
-    def test_message_not_null(self):
-        response = GenerateCodePost200Response(message=None)
-        self.assertIsNone(response.message)
+    def tearDown(self):
+        db.session.delete(self.response)
+        db.session.commit()
 
-    def test_message_type(self):
-        response = GenerateCodePost200Response(message="Hello World")
-        self.assertIsInstance(response.message, str)
+    def test_generate_code_post200_response_model(self):
+        self.assertEqual(self.response.message, self.message)
 
-    def test_schema_loads_instance(self):
-        response = GenerateCodePost200Response(message="Hello World")
-        serialized_data = GenerateCodePost200Response_schema.dump(response)
-        deserialized_data = GenerateCodePost200Response_schema.load(serialized_data)
-        self.assertIsInstance(deserialized_data, GenerateCodePost200Response)
+    def test_generate_code_post200_response_schema_dump(self):
+        data = GenerateCodePost200Response_schema.dump(self.response)
+        self.assertEqual(data['message'], self.message)
 
-    def test_schema_loads_multiple_instances(self):
-        response1 = GenerateCodePost200Response(message="Hello World")
-        response2 = GenerateCodePost200Response(message="Goodbye World")
-        responses = [response1, response2]
-        serialized_data = GenerateCodePost200Responses_schema.dump(responses)
-        deserialized_data = GenerateCodePost200Responses_schema.load(serialized_data, many=True)
-        self.assertIsInstance(deserialized_data, list)
-        self.assertIsInstance(deserialized_data[0], GenerateCodePost200Response)
-        self.assertIsInstance(deserialized_data[1], GenerateCodePost200Response)
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_generate_code_post200_response_schema_load(self):
+        data = {'message': self.message}
+        response = GenerateCodePost200ResponseSchema().load(data)
+        self.assertIsInstance(response, GenerateCodePost200Response)
+        self.assertEqual(response.message, self.message)

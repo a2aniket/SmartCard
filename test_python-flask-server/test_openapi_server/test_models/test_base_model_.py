@@ -4,68 +4,84 @@ import unittest
 class TestModel(unittest.TestCase):
 
     def test_from_dict(self):
-        # Test case with valid dictionary input
-        model_dict = {'attr1': 'value1', 'attr2': 'value2'}
-        model = Model.from_dict(model_dict)
-        self.assertIsInstance(model, Model)
-        self.assertEqual(model.attr1, 'value1')
-        self.assertEqual(model.attr2, 'value2')
+        # Test 1: Test with empty dictionary
+        dikt = {}
+        model = Model.from_dict(dikt)
+        self.assertEqual(model.__dict__, {})
 
-        # Test case with invalid dictionary input
-        model_dict = {'attr1': 'value1', 'invalid_attr': 'invalid_value'}
-        with self.assertRaises(AttributeError):
-            Model.from_dict(model_dict)
+        # Test 2: Test with dictionary having one attribute
+        dikt = {"attribute1": "value1"}
+        model = Model.from_dict(dikt)
+        self.assertEqual(model.__dict__, {"attribute1": "value1"})
+
+        # Test 3: Test with dictionary having multiple attributes
+        dikt = {"attribute1": "value1", "attribute2": 2}
+        model = Model.from_dict(dikt)
+        self.assertEqual(model.__dict__, {"attribute1": "value1", "attribute2": 2})
 
     def test_to_dict(self):
-        # Test case with valid model input
+        # Test 1: Test with empty model object
         model = Model()
-        model.attr1 = 'value1'
-        model_dict = model.to_dict()
-        self.assertIsInstance(model_dict, dict)
-        self.assertEqual(model_dict['attr1'], 'value1')
+        dikt = model.to_dict()
+        self.assertEqual(dikt, {})
 
-        # Test case with nested model input
-        nested_model = Model()
-        nested_model.attr1 = 'nested_value1'
-        model.attr2 = nested_model
-        model_dict = model.to_dict()
-        self.assertIsInstance(model_dict, dict)
-        self.assertEqual(model_dict['attr2']['attr1'], 'nested_value1')
+        # Test 2: Test with model object having one attribute
+        model.attribute1 = "value1"
+        dikt = model.to_dict()
+        self.assertEqual(dikt, {"attribute1": "value1"})
+
+        # Test 3: Test with model object having multiple attributes
+        model.attribute2 = 2
+        dikt = model.to_dict()
+        self.assertEqual(dikt, {"attribute1": "value1", "attribute2": 2})
 
     def test_to_str(self):
-        # Test case with valid model input
+        # Test 1: Test with empty model object
         model = Model()
-        model.attr1 = 'value1'
-        self.assertIsInstance(model.to_str(), str)
+        str_model = model.to_str()
+        self.assertEqual(str_model, "{}")
+
+        # Test 2: Test with model object having one attribute
+        model.attribute1 = "value1"
+        str_model = model.to_str()
+        self.assertEqual(str_model, "{'attribute1': 'value1'}")
+
+        # Test 3: Test with model object having multiple attributes
+        model.attribute2 = 2
+        str_model = model.to_str()
+        self.assertEqual(str_model, "{'attribute1': 'value1', 'attribute2': 2}")
 
     def test_eq(self):
-        # Test case with equal models
+        # Test 1: Test with empty model objects
         model1 = Model()
-        model1.attr1 = 'value1'
-        model1.attr2 = 'value2'
-
         model2 = Model()
-        model2.attr1 = 'value1'
-        model2.attr2 = 'value2'
-
         self.assertEqual(model1, model2)
 
-        # Test case with unequal models
-        model1.attr2 = 'different_value'
-        self.assertNotEqual(model1, model2)
+        # Test 2: Test with model objects having one attribute
+        model1.attribute1 = "value1"
+        model2.attribute1 = "value1"
+        self.assertEqual(model1, model2)
+
+        # Test 3: Test with model objects having multiple attributes
+        model1.attribute2 = 2
+        model2.attribute2 = 2
+        self.assertEqual(model1, model2)
 
     def test_ne(self):
-        # Test case with unequal models
+        # Test 1: Test with empty model objects
         model1 = Model()
-        model1.attr1 = 'value1'
-        model1.attr2 = 'value2'
-
         model2 = Model()
-        model2.attr1 = 'value1'
-        model2.attr2 = 'value2'
+        self.assertNotEqual(model1, model2)
 
-        self.assertFalse(model1 != model2)
+        # Test 2: Test with model objects having one attribute
+        model1.attribute1 = "value1"
+        model2.attribute1 = "value2"
+        self.assertNotEqual(model1, model2)
 
-        # Test case with equal models
-        model1.attr2 = 'different_value'
-        self.assertTrue(model1 != model2)
+        # Test 3: Test with model objects having multiple attributes
+        model1.attribute2 = 2
+        model2.attribute2 = 3
+        self.assertNotEqual(model1, model2)
+
+if __name__ == '__main__':
+    unittest.main()

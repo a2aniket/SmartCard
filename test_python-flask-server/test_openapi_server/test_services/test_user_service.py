@@ -2,39 +2,31 @@ from python-flask-server.openapi_server.services.user_service import *
 import unittest
 from openapi_server.models.user import User
 from openapi_server.config_test import db
-import logging
-
-logging.basicConfig(level=logging.INFO)
+from openapi_server.user_service import UserService
 
 class TestUserService(unittest.TestCase):
+
     def test_create_user(self):
-        logging.info(f"Testing create_user method.")
-        # Test creating user with valid username and password
-        user1 = UserService.create_user("test_user1", "password1")
-        self.assertIsInstance(user1, User)
-        self.assertEqual(user1.username, "test_user1")
-        self.assertEqual(user1.password, "password1")
-
-        # Test creating user with invalid username
-        with self.assertRaises(ValueError):
-            UserService.create_user("", "password2")
-
-        # Test creating user with invalid password
-        with self.assertRaises(ValueError):
-            UserService.create_user("test_user2", "")
+        # Test creating user
+        user = UserService.create_user("test_user", "test_password")
+        self.assertIsInstance(user, User)
+        self.assertEqual(user.username, "test_user")
+        self.assertEqual(user.password, "test_password")
 
     def test_get_user_by_username(self):
-        logging.info(f"Testing get_user_by_username method.")
-        # Test getting user with valid username
-        user1 = UserService.create_user("test_user3", "password3")
-        user2 = UserService.get_user_by_username("test_user3")
-        self.assertIsInstance(user2, User)
-        self.assertEqual(user2.username, "test_user3")
-        self.assertEqual(user2.password, "password3")
+        # Test getting user by username
+        user = UserService.create_user("test_user", "test_password")
+        retrieved_user = UserService.get_user_by_username("test_user")
+        self.assertEqual(user.username, retrieved_user.username)
+        self.assertEqual(user.password, retrieved_user.password)
 
-        # Test getting user with invalid username
-        user3 = UserService.get_user_by_username("invalid_user")
-        self.assertIsNone(user3)
+    def test_get_user_by_username_nonexistent(self):
+        # Test getting nonexistent user by username
+        retrieved_user = UserService.get_user_by_username("nonexistent_user")
+        self.assertIsNone(retrieved_user)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_create_duplicate_user(self):
+        # Test creating duplicate user
+        UserService.create_user("test_user", "test_password")
+        with self.assertRaises(Exception):
+            UserService.create_user("test_user", "test_password")

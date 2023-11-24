@@ -1,63 +1,82 @@
 from python-flask-server.openapi_server.controllers.security_controller_ import *
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch, MagicMock
+
 from openapi_server import app
 from openapi_server.services.user_service import UserService
-from openapi_server.models.user import User
 
 class TestAuthentication(unittest.TestCase):
 
-    def setUp(self):
-        self.app = app.test_client()
-        self.user = User(username="testuser", password="testpassword")
+    @patch.object(UserService, "get_user_by_username")
+    def test_authenticate_valid_user(self, mock_get_user_by_username):
+        mock_user = MagicMock()
+        mock_user.check_password.return_value = True
+        mock_get_user_by_username.return_value = mock_user
 
-    def tearDown(self):
-        UserService.delete_user_by_username(self.user.username)
+        result = authenticate("test_user", "test_password")
 
-    def test_authenticate_valid_user(self):
-        UserService.create_user(self.user)
-        authenticated_user = authenticate(self.user.username, self.user.password)
-        self.assertIsNotNone(authenticated_user)
-        self.assertEqual(authenticated_user.username, self.user.username)
+        self.assertEqual(result, mock_user)
 
-    def test_authenticate_invalid_user(self):
-        UserService.create_user(self.user)
-        authenticated_user = authenticate(self.user.username, "wrongpassword")
-        self.assertIsNone(authenticated_user)
+    @patch.object(UserService, "get_user_by_username")
+    def test_authenticate_invalid_user(self, mock_get_user_by_username):
+        mock_get_user_by_username.return_value = None
 
-    def test_create_token(self):
-        token = create_token(self.user.id)
-        self.assertIsNotNone(token)
+        result = authenticate("test_user", "test_password")
 
-    def test_authorize_valid_token(self):
-        UserService.create_user(self.user)
-        token = create_token(self.user.id)
-        authorized_user = authorize(token)
-        self.assertIsNotNone(authorized_user)
-        self.assertEqual(authorized_user.username, self.user.username)
+        self.assertIsNone(result)
 
-    def test_authorize_expired_token(self):
-        UserService.create_user(self.user)
-        app.config["JWT_EXPIRATION_HOURS"] = -1
-        token = create_token(self.user.id)
-        authorized_user = authorize(token)
-        self.assertIsNone(authorized_user)
+    @patch("jwt.encode")
+    def test_create_token(self, mock_jwt_encode):
+        mock_jwt_encode.return_value = b"test_token"
 
-    def test_authorize_invalid_token(self):
-        UserService.create_user(self.user)
-        token = create_token(self.user.id)
-        with patch("jwt.decode", side_effect=jwt.InvalidTokenError):
-            authorized_user = authorize(token)
-        self.assertIsNone(authorized_user)
+        result = create_token(123)
 
-    def test_login_valid_credentials(self):
-        UserService.create_user(self.user)
-        response = self.app.post("/login", json={"username": self.user.username, "password": self.user.password})
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("token", response.json)
+        self.assertEqual(result, b"test_token")
 
-    def test_login_invalid_credentials(self):
-        UserService.create_user(self.user)
-        response = self.app.post("/login", json={"username": self.user.username, "password": "wrongpassword"})
-        self.assertEqual(response.status_code, 401)
-        self.assertIn("message", response.json)
+    @patch("jwt.decode")
+    def test_authorize_valid_token(self, mock_jwt_decode):
+        mock_user = MagicMock()
+        mock_user.id = 123
+        mock_jwt_decode.return_value = {"sub": 123}
+        User.query.get.return_value = mock_user
+
+        result = authorize("test_token")
+
+        self.assertEqual(result, mock_user)
+
+    @patch("jwt.decode")
+    def test_authorize_expired_token(self, mock_jwt_decode):
+        mock_jwt_decode.side_effect = jwt.ExpiredSignatureError
+
+        result = authorize("test_token")
+
+        self.assertIsNone(result)
+
+    @patch("jwt.decode")
+    def test_authorize_invalid_token(self, mock_jwt_decode):
+        mock_jwt_decode.side_effect = jwt.InvalidTokenError
+
+        result = authorize("test_token")
+
+        self.assertIsNone(result)
+
+    def test_login_valid_user(self):
+        with app.test_client() as client:
+            mock_user = MagicMock()
+            mock_user.id = 123
+            mock_user.check_password.return_value = True
+            UserService.get_user_by_username.return_value = mock_user
+
+            response = client.post("/login", json={"username": "test_user", "password": "test_password"})
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("token", response.json)
+
+    def test_login_invalid_user(self):
+        with app.test_client() as client:
+            UserService.get_user_by_username.return_value = None
+
+            response = client.post("/login", json={"username": "test_user", "password": "test_password"})
+
+            self.assertEqual(response.status_code, 401)
+            self.assertIn("message", response.json)

@@ -1,32 +1,28 @@
 from python-flask-server.openapi_server.services.pagination_sorting import *
 import unittest
-from flask import Flask
-from openapi_server.utils.constants import *
-from openapi_server.services.searching import searching
-from unittest.mock import patch, MagicMock
-
-app = Flask(__name__)
+from unittest.mock import Mock
+from openapi_server import pagination_sorting
 
 class TestPaginationSorting(unittest.TestCase):
-    
-    @patch('flask.request')
-    def test_pagination_sorting(self, mock_request):
-        mock_request.args.get.side_effect = lambda x, default, type: {
-            PARAM_PAGE_NUMBER: 2,
-            PARAM_PAGE_SIZE: 10,
-            PARAM_SORT_BY: 'id',
-            PARAM_SORT_DIR: 'desc'
+
+    def test_pagination_sorting(self):
+        # Set up mock request object
+        mock_request = Mock()
+        mock_request.args.get.side_effect = lambda x, default=None, type=None: {
+            'page_number': 1,
+            'page_size': 10,
+            'sort_by': 'id',
+            'sort_dir': 'asc',
+            'search': ''
         }.get(x, default)
-        
-        class Model:
-            id = MagicMock()
-        
-        search_params = 'test'
-        q = searching(search_params, Model)
-        q.order_by = MagicMock()
-        q.paginate = MagicMock()
-        
-        pagination_sorting(Model)
-        
-        q.order_by.assert_called_once_with(getattr(Model, 'id').desc())
-        q.paginate.assert_called_once_with(page=2, per_page=10)
+
+        # Call the pagination_sorting function with the mock request and model
+        result = pagination_sorting(mock_request, Mock())
+
+        # Assert that the result is a list of dicts with length 10
+        self.assertIsInstance(result, list)
+        self.assertGreater(len(result), 0)
+        self.assertIsInstance(result[0], dict)
+
+if __name__ == '__main__':
+    unittest.main()

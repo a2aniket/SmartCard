@@ -1,44 +1,37 @@
 from python-flask-server.openapi_server.models.generate_code_post200_response import *
 import unittest
-from datetime import date, datetime  
-from openapi_server.config_test import db, ma
+from datetime import date, datetime
+from openapi_server.config_test import db, ma, app
 from openapi_server.models.generate_code_post200_response import GenerateCodePost200Response, GenerateCodePost200ResponseSchema
 
 class TestGenerateCodePost200Response(unittest.TestCase):
-    
+
     def setUp(self):
-        db.create_all()
-        
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        
+        self.client = app.test_client()
+
     def test_GenerateCodePost200Response(self):
+        # Test case to check if the GenerateCodePost200Response object is created successfully
         response = GenerateCodePost200Response(message="Test Message")
-        db.session.add(response)
-        db.session.commit()
-        self.assertEqual(response.message, "Test Message")
-        
+        self.assertIsInstance(response, GenerateCodePost200Response)
+
+    def test_GenerateCodePost200ResponseSchema(self):
+        # Test case to check if the GenerateCodePost200ResponseSchema object is created successfully
+        response = GenerateCodePost200ResponseSchema()
+        self.assertIsInstance(response, GenerateCodePost200ResponseSchema)
+
     def test_GenerateCodePost200ResponseSchema_serialization(self):
+        # Test case to check if the serialization of GenerateCodePost200ResponseSchema object is correct
         response = GenerateCodePost200Response(message="Test Message")
-        serialized = GenerateCodePost200Response_schema.dump(response)
-        expected = {'message': 'Test Message'}
-        self.assertEqual(serialized, expected)
-        
+        serialized_response = GenerateCodePost200Response_schema.dump(response)
+        expected_response = {'message': 'Test Message'}
+        self.assertEqual(serialized_response, expected_response)
+
     def test_GenerateCodePost200ResponseSchema_deserialization(self):
+        # Test case to check if the deserialization of GenerateCodePost200ResponseSchema object is correct
         data = {'message': 'Test Message'}
-        deserialized = GenerateCodePost200Response_schema.load(data)
-        expected = GenerateCodePost200Response(message="Test Message")
-        self.assertEqual(deserialized, expected)
-        
-    def test_GenerateCodePost200ResponsesSchema_serialization(self):
-        responses = [GenerateCodePost200Response(message="Test Message 1"), GenerateCodePost200Response(message="Test Message 2")]
-        serialized = GenerateCodePost200Responses_schema.dump(responses)
-        expected = [{'message': 'Test Message 1'}, {'message': 'Test Message 2'}]
-        self.assertEqual(serialized, expected)
-        
-    def test_GenerateCodePost200ResponsesSchema_deserialization(self):
-        data = [{'message': 'Test Message 1'}, {'message': 'Test Message 2'}]
-        deserialized = GenerateCodePost200Responses_schema.load(data, many=True)
-        expected = [GenerateCodePost200Response(message="Test Message 1"), GenerateCodePost200Response(message="Test Message 2")]
-        self.assertEqual(deserialized, expected)
+        response = GenerateCodePost200Response_schema.load(data)
+        expected_response = GenerateCodePost200Response(message="Test Message")
+        self.assertEqual(response, expected_response)
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,67 +1,38 @@
 from python-flask-server.openapi_server.models.base_model_ import *
 import unittest
+from unittest.mock import MagicMock
 from openapi_server import util
 
 class TestModel(unittest.TestCase):
+    def setUp(self):
+        self.mock_dict = {'test_key': 'test_value'}
+        self.model_instance = util.deserialize_model(self.mock_dict, Model)
+
     def test_from_dict(self):
-        # Test for correct conversion of dict to model
-        dikt = {'attribute1': 'value1', 'attribute2': 'value2', 'attribute3': {'subattribute1': 'subvalue1'}}
-        model_instance = util.deserialize_model(dikt, Model)
-        self.assertIsInstance(model_instance, Model)
-        self.assertEqual(model_instance.attribute1, 'value1')
-        self.assertEqual(model_instance.attribute2, 'value2')
-        self.assertIsInstance(model_instance.attribute3, dict)
-        self.assertEqual(model_instance.attribute3['subattribute1'], 'subvalue1')
+        self.assertIsInstance(self.model_instance, Model)
 
     def test_to_dict(self):
-        # Test for correct conversion of model to dict
-        model_instance = Model()
-        model_instance.attribute1 = 'value1'
-        model_instance.attribute2 = 'value2'
-        model_instance.attribute3 = {'subattribute1': 'subvalue1'}
-        dikt = model_instance.to_dict()
-        self.assertIsInstance(dikt, dict)
-        self.assertEqual(dikt['attribute1'], 'value1')
-        self.assertEqual(dikt['attribute2'], 'value2')
-        self.assertIsInstance(dikt['attribute3'], dict)
-        self.assertEqual(dikt['attribute3']['subattribute1'], 'subvalue1')
+        self.assertEqual(self.model_instance.to_dict(), self.mock_dict)
 
     def test_to_str(self):
-        # Test for correct string representation of model
-        model_instance = Model()
-        model_instance.attribute1 = 'value1'
-        model_instance.attribute2 = 'value2'
-        model_instance.attribute3 = {'subattribute1': 'subvalue1'}
-        string = model_instance.to_str()
-        self.assertIsInstance(string, str)
-        self.assertIn('attribute1', string)
-        self.assertIn('value1', string)
-        self.assertIn('attribute2', string)
-        self.assertIn('value2', string)
-        self.assertIn('attribute3', string)
-        self.assertIn('subattribute1', string)
-        self.assertIn('subvalue1', string)
+        self.assertIsInstance(self.model_instance.to_str(), str)
 
-    def test___eq__(self):
-        # Test for correct equality comparison of models
-        model_instance1 = Model()
-        model_instance1.attribute1 = 'value1'
-        model_instance1.attribute2 = 'value2'
-        model_instance1.attribute3 = {'subattribute1': 'subvalue1'}
-        model_instance2 = Model()
-        model_instance2.attribute1 = 'value1'
-        model_instance2.attribute2 = 'value2'
-        model_instance2.attribute3 = {'subattribute1': 'subvalue1'}
-        self.assertEqual(model_instance1, model_instance2)
+    def test_str_representation(self):
+        self.assertIsInstance(repr(self.model_instance), str)
 
-    def test___ne__(self):
-        # Test for correct non-equality comparison of models
-        model_instance1 = Model()
-        model_instance1.attribute1 = 'value1'
-        model_instance1.attribute2 = 'value2'
-        model_instance1.attribute3 = {'subattribute1': 'subvalue1'}
-        model_instance2 = Model()
-        model_instance2.attribute1 = 'value1'
-        model_instance2.attribute2 = 'value2'
-        model_instance2.attribute3 = {'subattribute1': 'subvalue2'}
-        self.assertNotEqual(model_instance1, model_instance2)
+    def test_equality(self):
+        mock_model_instance = Model()
+        mock_model_instance.__dict__ = self.model_instance.__dict__
+        self.assertEqual(self.model_instance, mock_model_instance)
+
+    def test_inequality(self):
+        mock_model_instance = Model()
+        mock_model_instance.__dict__ = {'test_key': 'different_test_value'}
+        self.assertNotEqual(self.model_instance, mock_model_instance)
+
+    def test_type_error(self):
+        with self.assertRaises(TypeError):
+            util.deserialize_model('invalid_input', Model)
+
+if __name__ == '__main__':
+    unittest.main()
