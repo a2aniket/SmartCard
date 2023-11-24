@@ -1,0 +1,9 @@
+.openapi-generator-ignore
+apis/CourseApi.ts
+apis/StudentApi.ts
+apis/index.ts
+index.ts
+models/Course.ts
+models/Student.ts
+models/index.ts
+runtime.ts
