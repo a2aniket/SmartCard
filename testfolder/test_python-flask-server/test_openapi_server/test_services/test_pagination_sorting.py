@@ -1,38 +1,62 @@
 from python-flask-server.openapi_server.services.pagination_sorting import *
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import Mock, patch
 from openapi_server.utils.constants import *
 from openapi_server.services.searching import searching
-from app import pagination_sorting
+from openapi_server import app
 
 class TestPaginationSorting(unittest.TestCase):
+
     def setUp(self):
-        self.Model = MagicMock()
-        self.request = MagicMock()
-        self.request.args.get = MagicMock(return_value=None)
-        self.request.args.get.side_effect = lambda x, default=None, type=None: default
+        self.app = app.test_client()
 
-    def test_pagination_sorting_default_values(self):
-        result = pagination_sorting(self.Model)
-        self.assertEqual(result, [])
+    def test_pagination_sorting(self):
+        with patch('flask.request') as mock_request:
+            mock_request.args.get.side_effect = lambda x, default, type: {
+                PARAM_PAGE_NUMBER: 1,
+                PARAM_PAGE_SIZE: 10,
+                PARAM_SORT_BY: 'id',
+                PARAM_SORT_DIR: 'desc'
+            }.get(x, default)
 
-    def test_pagination_sorting_with_pagination_params(self):
-        self.request.args.get.side_effect = lambda x, default=None, type=None: 1 if x == PARAM_PAGE_NUMBER else 10 if x == PARAM_PAGE_SIZE else default
-        result = pagination_sorting(self.Model)
-        self.assertEqual(result, [])
+            result = pagination_sorting(Mock())
 
-    def test_pagination_sorting_with_sorting_params(self):
-        self.request.args.get.side_effect = lambda x, default=None, type=None: "name" if x == PARAM_SORT_BY else "asc" if x == PARAM_SORT_DIR else default
-        result = pagination_sorting(self.Model)
-        self.assertEqual(result, [])
+            self.assertEqual(len(result), 10)
+            self.assertEqual(result[0], 'item1')
+            self.assertEqual(result[-1], 'item10')
 
-    def test_pagination_sorting_with_search_params(self):
-        self.request.args.get.side_effect = lambda x, default=None, type=None: "search query" if x == 'search' else default
-        searching_mock = MagicMock(return_value=self.Model)
-        searching.searching = searching_mock
-        result = pagination_sorting(self.Model)
-        searching_mock.assert_called_once_with("search query", self.Model)
-        self.assertEqual(result, [])
+    def test_pagination_sorting_invalid_sort_dir(self):
+        with patch('flask.request') as mock_request:
+            mock_request.args.get.side_effect = lambda x, default, type: {
+                PARAM_PAGE_NUMBER: 1,
+                PARAM_PAGE_SIZE: 10,
+                PARAM_SORT_BY: 'id',
+                PARAM_SORT_DIR: 'invalid_dir'
+            }.get(x, default)
 
-if __name__ == '__main__':
-    unittest.main()
+            result = pagination_sorting(Mock())
+
+            self.assertEqual(len(result), 10)
+            self.assertEqual(result[0], 'item1')
+            self.assertEqual(result[-1], 'item10')
+
+    def test_pagination_sorting_search_params(self):
+        with patch('flask.request') as mock_request:
+            mock_request.args.get.side_effect = lambda x, default, type: {
+                PARAM_PAGE_NUMBER: 1,
+                PARAM_PAGE_SIZE: 10,
+                PARAM_SORT_BY: 'id',
+                PARAM_SORT_DIR: 'asc',
+                'search': 'test'
+            }.get(x, default)
+
+            with patch('openapi_server.services.searching.searching') as mock_searching:
+                mock_searching.return_value = Mock(order_by=Mock().order_by)
+
+                result = pagination_sorting(Mock())
+
+                mock_searching.assert_called_once_with('test', Mock())
+                mock_searching.return_value.order_by.assert_called_once_with(Mock().id.asc())
+                self.assertEqual(len(result), 10)
+                self.assertEqual(result[0], 'item1')
+                self.assertEqual(result[-1], 'item10')

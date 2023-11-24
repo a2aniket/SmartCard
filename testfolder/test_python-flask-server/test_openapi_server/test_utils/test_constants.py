@@ -1,39 +1,34 @@
 from python-flask-server.openapi_server.utils.constants import *
 import unittest
 
-class TestPagination(unittest.TestCase):
-    
-    def test_default_parameters(self):
+class TestDefaultParameters(unittest.TestCase):
+    def test_pageNumber(self):
         self.assertEqual(pageNumber, 1)
+        
+    def test_pageSize(self):
         self.assertEqual(pageSize, 100)
+        
+    def test_sortBy(self):
         self.assertEqual(sortBy, 'id')
+        
+    def test_sortDir(self):
         self.assertEqual(sortDir, 'asc')
+        
+    def test_search(self):
         self.assertEqual(search, '')
+
+class TestParameters(unittest.TestCase):
+    def test_PARAM_PAGE_NUMBER(self):
+        self.assertEqual(PARAM_PAGE_NUMBER, 'pageNumber')
         
-    def test_param_page_number(self):
-        global pageNumber
-        pageNumber = 2
-        self.assertEqual(pageNumber, 2)
+    def test_PARAM_PAGE_SIZE(self):
+        self.assertEqual(PARAM_PAGE_SIZE, 'pageSize')
         
-    def test_param_page_size(self):
-        global pageSize
-        pageSize = 50
-        self.assertEqual(pageSize, 50)
+    def test_PARAM_SORT_BY(self):
+        self.assertEqual(PARAM_SORT_BY, 'sortBy')
         
-    def test_param_sort_by(self):
-        global sortBy
-        sortBy = 'name'
-        self.assertEqual(sortBy, 'name')
+    def test_PARAM_SORT_DIR(self):
+        self.assertEqual(PARAM_SORT_DIR, 'sortDir')
         
-    def test_param_sort_dir(self):
-        global sortDir
-        sortDir = 'desc'
-        self.assertEqual(sortDir, 'desc')
-        
-    def test_param_search(self):
-        global search
-        search = 'John'
-        self.assertEqual(search, 'John')
-        
-if __name__ == '__main__':
-    unittest.main()
+    def test_PARAM_SEARCH(self):
+        self.assertEqual(PARAM_SEARCH, 'search')

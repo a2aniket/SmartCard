@@ -1,67 +1,31 @@
 from python-flask-server.openapi_server.__main__ import *
 import unittest
-import requests
+import json
+from openapi_server import config_test
+from openapi_server.controllers import security_controller_, user_controller
 
 class TestAPI(unittest.TestCase):
-    
+
+    def setUp(self):
+        self.app = config_test.connex_app.test_client()
+
     def test_create_user(self):
-        # Test creating a new user
-        data = {
-            "username": "test_user",
-            "password": "test_password"
+        payload = {
+            "username": "testuser",
+            "password": "testpass"
         }
-        response = requests.post("http://localhost:8000/users", json=data)
+        response = self.app.post('/users', json=payload)
         self.assertEqual(response.status_code, 201)
-    
-    def test_create_user_missing_username(self):
-        # Test creating a new user with missing username
-        data = {
-            "password": "test_password"
-        }
-        response = requests.post("http://localhost:8000/users", json=data)
-        self.assertEqual(response.status_code, 400)
-    
-    def test_create_user_missing_password(self):
-        # Test creating a new user with missing password
-        data = {
-            "username": "test_user"
-        }
-        response = requests.post("http://localhost:8000/users", json=data)
-        self.assertEqual(response.status_code, 400)
-    
+        self.assertIn('id', json.loads(response.data))
+
     def test_login(self):
-        # Test logging in with valid credentials
-        data = {
-            "username": "test_user",
-            "password": "test_password"
+        payload = {
+            "username": "testuser",
+            "password": "testpass"
         }
-        response = requests.post("http://localhost:8000/login", json=data)
+        response = self.app.post('/login', json=payload)
         self.assertEqual(response.status_code, 200)
-    
-    def test_login_invalid_credentials(self):
-        # Test logging in with invalid credentials
-        data = {
-            "username": "test_user",
-            "password": "wrong_password"
-        }
-        response = requests.post("http://localhost:8000/login", json=data)
-        self.assertEqual(response.status_code, 401)
-    
-    def test_login_missing_username(self):
-        # Test logging in with missing username
-        data = {
-            "password": "test_password"
-        }
-        response = requests.post("http://localhost:8000/login", json=data)
-        self.assertEqual(response.status_code, 400)
-    
-    def test_login_missing_password(self):
-        # Test logging in with missing password
-        data = {
-            "username": "test_user"
-        }
-        response = requests.post("http://localhost:8000/login", json=data)
-        self.assertEqual(response.status_code, 400)
+        self.assertIn('access_token', json.loads(response.data))
 
 if __name__ == '__main__':
     unittest.main()

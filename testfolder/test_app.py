@@ -1,37 +1,39 @@
 from app import *
 import unittest
+from flask import Flask,render_template,request
 import pickle
-from app import app
-from flask import Flask
+import pandas as pd  
 
 class TestBill(unittest.TestCase):
-
-    def test_home(self):
-        with app.test_client() as c:
-            response = c.get('/')
+    def test_total_price(self):
+        with open('bill.pkl', 'rb') as handle:
+            b = pickle.load(handle)
+        total=0
+        for i in b:
+            total=total+b[i]['totalPrice']
+        self.assertTrue(isinstance(total, float))
+    
+    def test_unit_count(self):
+        with open('bill.pkl', 'rb') as handle:
+            b = pickle.load(handle)
+        units=0
+        for i in b:
+            units=units+b[i]['unit']
+        self.assertTrue(isinstance(units, int))
+    
+    def test_home_page(self):
+        app = Flask(__name__)
+        with app.test_client() as client:
+            response = client.get('/')
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-
-    def test_bill_data(self):
-        with open('bill.pkl', 'rb') as handle:
-            b = pickle.load(handle)
-        self.assertIsNotNone(b)
-
-    def test_bill_total(self):
-        with open('bill.pkl', 'rb') as handle:
-            b = pickle.load(handle)
-        total = 0
-        for i in b:
-            total = total + b[i]['totalPrice']
-        self.assertIsNotNone(total)
-
-    def test_bill_units(self):
-        with open('bill.pkl', 'rb') as handle:
-            b = pickle.load(handle)
-        units = 0
-        for i in b:
-            units = units + b[i]['unit']
-        self.assertIsNotNone(units)
+    
+    def test_home_page_content(self):
+        app = Flask(__name__)
+        with app.test_client() as client:
+            response = client.get('/')
+            self.assertIn(b'bill', response.data)
+            self.assertIn(b'units', response.data)
+            self.assertIn(b'total', response.data)
 
 if __name__ == '__main__':
     unittest.main()

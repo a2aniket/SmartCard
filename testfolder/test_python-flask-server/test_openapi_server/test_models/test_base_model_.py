@@ -1,38 +1,81 @@
 from python-flask-server.openapi_server.models.base_model_ import *
 import unittest
-from unittest.mock import MagicMock
 from openapi_server import util
 
 class TestModel(unittest.TestCase):
-    def setUp(self):
-        self.mock_dict = {'test_key': 'test_value'}
-        self.model_instance = util.deserialize_model(self.mock_dict, Model)
 
     def test_from_dict(self):
-        self.assertIsInstance(self.model_instance, Model)
+        # Test case when dictionary is empty
+        empty_dict = {}
+        model = Model.from_dict(empty_dict)
+        self.assertEqual(model.__class__.__name__, 'Model')
+
+        # Test case when dictionary has only one key-value pair
+        dict_with_one_pair = {'key': 'value'}
+        model = Model.from_dict(dict_with_one_pair)
+        self.assertEqual(model.__class__.__name__, 'Model')
+
+        # Test case when dictionary has multiple key-value pairs
+        dict_with_multiple_pairs = {'key1': 'value1', 'key2': 'value2'}
+        model = Model.from_dict(dict_with_multiple_pairs)
+        self.assertEqual(model.__class__.__name__, 'Model')
 
     def test_to_dict(self):
-        self.assertEqual(self.model_instance.to_dict(), self.mock_dict)
+        # Test case when model is empty
+        model = Model()
+        dict = model.to_dict()
+        self.assertEqual(dict, {})
+
+        # Test case when model has only one attribute
+        model.key = 'value'
+        dict = model.to_dict()
+        self.assertEqual(dict, {'key': 'value'})
+
+        # Test case when model has multiple attributes
+        model.key1 = 'value1'
+        model.key2 = 'value2'
+        dict = model.to_dict()
+        self.assertEqual(dict, {'key': 'value', 'key1': 'value1', 'key2': 'value2'})
 
     def test_to_str(self):
-        self.assertIsInstance(self.model_instance.to_str(), str)
+        # Test case when model is empty
+        model = Model()
+        string = model.to_str()
+        self.assertEqual(string, '{}')
 
-    def test_str_representation(self):
-        self.assertIsInstance(repr(self.model_instance), str)
+        # Test case when model has only one attribute
+        model.key = 'value'
+        string = model.to_str()
+        self.assertEqual(string, "{'key': 'value'}")
 
-    def test_equality(self):
-        mock_model_instance = Model()
-        mock_model_instance.__dict__ = self.model_instance.__dict__
-        self.assertEqual(self.model_instance, mock_model_instance)
+        # Test case when model has multiple attributes
+        model.key1 = 'value1'
+        model.key2 = 'value2'
+        string = model.to_str()
+        self.assertEqual(string, "{'key': 'value', 'key1': 'value1', 'key2': 'value2'}")
 
-    def test_inequality(self):
-        mock_model_instance = Model()
-        mock_model_instance.__dict__ = {'test_key': 'different_test_value'}
-        self.assertNotEqual(self.model_instance, mock_model_instance)
+    def test_eq(self):
+        # Test case when two models are equal
+        model1 = Model()
+        model1.key = 'value'
+        model2 = Model()
+        model2.key = 'value'
+        self.assertTrue(model1 == model2)
 
-    def test_type_error(self):
-        with self.assertRaises(TypeError):
-            util.deserialize_model('invalid_input', Model)
+        # Test case when two models are not equal
+        model3 = Model()
+        model3.key = 'different_value'
+        self.assertFalse(model1 == model3)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_ne(self):
+        # Test case when two models are not equal
+        model1 = Model()
+        model1.key = 'value'
+        model2 = Model()
+        model2.key = 'different_value'
+        self.assertTrue(model1 != model2)
+
+        # Test case when two models are equal
+        model3 = Model()
+        model3.key = 'value'
+        self.assertFalse(model1 != model3)

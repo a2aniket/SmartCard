@@ -1,14 +1,11 @@
 from python-flask-server.openapi_server.test.__init__ import *
-import unittest
 import logging
-
+import unittest
 import connexion
 from flask_testing import TestCase
-
 from openapi_server.encoder import JSONEncoder
 
-
-class TestBase(TestCase):
+class TestBaseTestCase(TestCase):
 
     def create_app(self):
         logging.getLogger('connexion.operation').setLevel('ERROR')
@@ -17,22 +14,25 @@ class TestBase(TestCase):
         app.add_api('openapi.yaml', pythonic_params=True)
         return app.app
 
-    def test_logger_level(self):
-        self.assertEqual(logging.getLogger('connexion.operation').getEffectiveLevel(), logging.ERROR)
+    def test_create_app(self):
+        self.assertIsNotNone(self.create_app())
+        self.assertEqual(type(self.create_app()), type(connexion.FlaskApp(__name__)))
 
-    def test_app_json_encoder(self):
-        app = self.create_app()
-        self.assertIsInstance(app.json_encoder, JSONEncoder)
+    def test_logging(self):
+        logger = logging.getLogger('connexion.operation')
+        self.assertEqual(logger.getEffectiveLevel(), logging.ERROR)
+
+    def test_encoder(self):
+        encoder = JSONEncoder()
+        self.assertIsNotNone(encoder)
 
     def test_add_api(self):
         app = self.create_app()
-        with app.app_context():
-            self.assertIsNotNone(connexion.get_swagger_ui_blueprint())
-
-    def test_pythonic_params(self):
-        app = self.create_app()
-        with app.app_context():
-            self.assertTrue(connexion.get_option('pythonic_params'))
+        self.assertIsNotNone(app)
+        with app.test_client() as client:
+            response = client.get('/api/v1/ping')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json, {'ping': 'pong'})
 
 if __name__ == '__main__':
     unittest.main()
