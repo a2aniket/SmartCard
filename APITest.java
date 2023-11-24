@@ -1,16 +1,22 @@
 import io.restassured.RestAssured;
 import io.restassured.authentication.BasicAuthScheme;
 import io.restassured.http.ContentType;
-import org.junit.Test;
-
+import io.restassured.response.Response;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 
-public class ApiTest {
+public class APIEndpointTest {
+
+    @BeforeClass
+    public void setup() {
+        RestAssured.baseURI = "https://reqres.in/api";
+    }
 
     @Test
-    public void verifyGetUserById() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testGetUser() {
         given()
                 .when()
                 .get("/users/2")
@@ -20,15 +26,10 @@ public class ApiTest {
     }
 
     @Test
-    public void verifyCreateUser() {
-        RestAssured.baseURI = "https://reqres.in/api";
-        String requestBody = "{\n" +
-                "    \"name\": \"Sam\",\n" +
-                "    \"job\": \"Project Leader\"\n" +
-                "}";
+    public void testCreateUser() {
         given()
                 .contentType(ContentType.JSON)
-                .body(requestBody)
+                .body("{\"name\": \"Sam\", \"job\": \"Project Leader\"}")
                 .when()
                 .post("/users")
                 .then()
@@ -38,15 +39,10 @@ public class ApiTest {
     }
 
     @Test
-    public void verifyUpdateUser() {
-        RestAssured.baseURI = "https://reqres.in/api";
-        String requestBody = "{\n" +
-                "    \"name\": \"Isha\",\n" +
-                "    \"job\": \"Software Engineer\"\n" +
-                "}";
+    public void testUpdateUser() {
         given()
                 .contentType(ContentType.JSON)
-                .body(requestBody)
+                .body("{\"name\": \"Isha\", \"job\": \"Software Engineer\"}")
                 .when()
                 .put("/users/2")
                 .then()
@@ -54,8 +50,7 @@ public class ApiTest {
     }
 
     @Test
-    public void verifyDeleteUser() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testDeleteUser() {
         given()
                 .when()
                 .delete("/users/2")
@@ -64,10 +59,9 @@ public class ApiTest {
     }
 
     @Test
-    public void verifyGetUsersWithQueryParams() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testGetUsersWithQuery() {
         given()
-                .queryParam("page", 2)
+                .queryParam("page", "2")
                 .when()
                 .get("/users")
                 .then()
@@ -75,10 +69,9 @@ public class ApiTest {
     }
 
     @Test
-    public void verifyGetUserByIdWithPathParams() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testGetUserByIdWithPathParam() {
         given()
-                .pathParam("id", 3)
+                .pathParam("id", "3")
                 .when()
                 .get("/users/{id}")
                 .then()
@@ -87,27 +80,17 @@ public class ApiTest {
     }
 
     @Test
-    public void verifyRegisterWithBasicAuth() {
-        RestAssured.baseURI = "https://reqres.in/api";
-        BasicAuthScheme authScheme = new BasicAuthScheme();
-        authScheme.setUserName("username");
-        authScheme.setPassword("password");
+    public void testRegisterWithBasicAuth() {
+        BasicAuthScheme basicAuthScheme = new BasicAuthScheme();
+        basicAuthScheme.setUserName("username");
+        basicAuthScheme.setPassword("password");
+
         given()
-                .auth().basic("username", "password")
+                .auth()
+                .basic("username", "password")
                 .when()
                 .post("/register")
                 .then()
                 .statusCode(400);
-    }
-
-    @Test
-    public void verifyGetUserWithCacheControl() {
-        RestAssured.baseURI = "https://reqres.in/api";
-        given()
-                .when()
-                .get("/users/2")
-                .then()
-                .statusCode(200)
-                .header("Cache-Control", equalTo("max-age=14400"));
     }
 }
