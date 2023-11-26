@@ -1,93 +1,108 @@
 import io.restassured.RestAssured;
+import io.restassured.authentication.BasicAuthScheme;
 import io.restassured.http.ContentType;
-import io.restassured.response.Response;
+import org.junit.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import static org.hamcrest.Matchers.*;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
 
-public class ApiTests {
+public class APIEndpointValidationTest {
+
+    private static final String BASE_URI = "https://reqres.in/api";
+    private static final String USERNAME = "testuser";
+    private static final String PASSWORD = "testpass";
+
+    @BeforeClass
+    public void setUp() {
+        RestAssured.baseURI = BASE_URI;
+    }
 
     @Test
-    public void testGetUserById() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testGetUser() {
         given()
                 .when()
                 .get("/users/2")
                 .then()
+                .assertThat()
                 .statusCode(200)
                 .body("data.first_name", equalTo("Janet"));
     }
 
     @Test
     public void testCreateUser() {
-        RestAssured.baseURI = "https://reqres.in/api";
         given()
                 .contentType(ContentType.JSON)
                 .body("{\"name\": \"Sam\", \"job\": \"Project Leader\"}")
                 .when()
                 .post("/users")
                 .then()
+                .assertThat()
                 .statusCode(201)
                 .body("name", equalTo("Sam"))
                 .body("job", containsString("Leader"));
     }
 
     @Test
-    public void testUpdateUserById() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testUpdateUser() {
         given()
                 .contentType(ContentType.JSON)
                 .body("{\"name\": \"Isha\", \"job\": \"Software Engineer\"}")
                 .when()
                 .put("/users/2")
                 .then()
+                .assertThat()
                 .statusCode(200);
     }
 
     @Test
-    public void testDeleteUserById() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testDeleteUser() {
         given()
                 .when()
                 .delete("/users/2")
                 .then()
+                .assertThat()
                 .statusCode(204);
     }
 
     @Test
-    public void testGetUsersByPage() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testGetUsersWithPagination() {
         given()
-                .param("page", "2")
                 .when()
+                .queryParam("page", 2)
                 .get("/users")
                 .then()
-                .statusCode(200);
-    }
-
-    @Test
-    public void testGetUserByIdWithPathParam() {
-        RestAssured.baseURI = "https://reqres.in/api";
-        given()
-                .pathParam("id", "3")
-                .when()
-                .get("/users/{id}")
-                .then()
+                .assertThat()
                 .statusCode(200)
-                .body("data.last_name", equalTo("Wong"));
+                .body("data", hasSize(6))
+                .body("total_pages", equalTo(2))
+                .body("page", equalTo(2));
     }
 
     @Test
-    public void testRegisterWithBasicAuth() {
-        RestAssured.baseURI = "https://reqres.in/api";
+    public void testRegisterUserWithBasicAuth() {
+        BasicAuthScheme authScheme = new BasicAuthScheme();
+        authScheme.setUserName(USERNAME);
+        authScheme.setPassword(PASSWORD);
         given()
                 .auth()
-                .preemptive()
-                .basic("username", "password")
+                .basic(authScheme.getUserName(), authScheme.getPassword())
                 .when()
                 .post("/register")
                 .then()
+                .assertThat()
                 .statusCode(400);
+    }
+
+    @Test
+    public void testGetUserWithPathVariable() {
+        given()
+                .when()
+                .pathParam("id", 3)
+                .get("/users/{id}")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body("data.last_name", equalTo("Wong"));
     }
 }
