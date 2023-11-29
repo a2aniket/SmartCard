@@ -1,2 +1,0 @@
-from python-flask-server.setup import *
-There is no code snippet to write test cases for as it is a setup.py file for a Python package. This file is used to define the package name, version, dependencies, and other details required for installation. Therefore, it does not require unit tests.
